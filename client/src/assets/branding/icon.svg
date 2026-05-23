@@ -1,0 +1,26 @@
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="primary-grad" x1="20" y1="12" x2="50" y2="85" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#1e3a8a" />
+    </linearGradient>
+    <linearGradient id="secondary-grad" x1="80" y1="12" x2="50" y2="85" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <linearGradient id="accent-grad" x1="39" y1="12" x2="61" y2="34" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#60a5fa" />
+    </linearGradient>
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="2" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <!-- Left Wing (Book Page / Heart Half) -->
+  <path d="M50 85C30 75 20 55 20 38C20 22 32 12 46 22C49 24 50 27 50 27C50 27 47 24 43 24C34 24 28 32 28 48C28 60 36 72 50 78Z" fill="url(#primary-grad)" />
+  <!-- Right Wing (Book Page / Heart Half) -->
+  <path d="M50 85C70 75 80 55 80 38C80 22 68 12 54 22C51 24 50 27 50 27C50 27 53 24 57 24C66 24 72 32 72 48C72 60 64 72 50 78Z" fill="url(#secondary-grad)" />
+  <!-- Center Star (Spark of Knowledge) -->
+  <path d="M50 10L53.5 19L62.5 22.5L53.5 26L50 35L46.5 26L37.5 22.5L46.5 19Z" fill="url(#accent-grad)" filter="url(#glow)" />
+</svg>
