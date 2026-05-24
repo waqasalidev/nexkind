@@ -58,17 +58,11 @@ const Logo = memo(({
     secondaryTextClass = 'text-secondary';
   }
 
-  // Dynamically select high-contrast premium gradients based on theme/background variant
-  // This matches logo.svg (light) and logo-white.svg (dark) exactly
-  const primaryGradStops = isDarkBackground
-    ? { stop1: '#3b82f6', stop2: '#2563eb' }  // Bright blue for contrast on dark
-    : { stop1: '#2563eb', stop2: '#1e3a8a' }; // Official logo blue for light
-
-  const secondaryGradStops = { stop1: '#f59e0b', stop2: '#d97706' }; // Consistent amber
-
-  const accentGradStops = isDarkBackground
-    ? { stop1: '#60a5fa', stop2: '#93c5fd' }  // Glowing accent for dark
-    : { stop1: '#3b82f6', stop2: '#60a5fa' }; // Official accent for light
+  // Always use the official brand color gradients for the icon to ensure 100% branding consistency
+  // across all pages, footers, sidebars, loading spinners, and the browser tab favicon.
+  const primaryGradStops = { stop1: '#2563eb', stop2: '#1e3a8a' }; // Official NexKind blue
+  const secondaryGradStops = { stop1: '#f59e0b', stop2: '#d97706' }; // Official NexKind amber
+  const accentGradStops = { stop1: '#3b82f6', stop2: '#60a5fa' }; // Official NexKind accent/glow
 
   const LogoIcon = (
     <svg
