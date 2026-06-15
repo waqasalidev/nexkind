@@ -1,14 +1,16 @@
 import { Link } from 'react-router-dom';
-import { BookOpen, Award, Briefcase, User, Home, LogOut, Calendar, Settings } from 'lucide-react';
+import { BookOpen, Award, Briefcase, User, Home, LogOut, Calendar, Settings, GraduationCap } from 'lucide-react';
 import Logo from '../common/Logo';
 
 const StudentSidebar = ({ activeTab, setActiveTab, onLogout }) => {
   const navItems = [
     { id: 'overview', label: 'Overview', icon: Home },
+    { id: 'profile', label: 'My Profile', icon: User },
     { id: 'courses', label: 'My Courses', icon: BookOpen },
     { id: 'events', label: 'My Events', icon: Calendar },
     { id: 'scholarships', label: 'Scholarships', icon: Award },
     { id: 'jobs', label: 'Jobs', icon: Briefcase },
+    { id: 'mentorship', label: 'Mentorship', icon: GraduationCap },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 

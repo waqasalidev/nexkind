@@ -1,14 +1,171 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, Briefcase, User, Bell, Calendar, Search, Sparkles } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { getStudentDashboard } from '../../api';
+import { BookOpen, Briefcase, User, Bell, Calendar, Search, Sparkles, GraduationCap } from 'lucide-react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { getStudentDashboard, getStudentMentoring, getChatConversations } from '../../api';
 import StudentCourses from '../../components/student/StudentCourses';
 import StudentEvents from '../../components/student/StudentEvents';
 import StudentScholarships from '../../components/student/StudentScholarships';
 import StudentJobs from '../../components/student/StudentJobs';
 import StudentSettings from '../../components/student/StudentSettings';
 import StudentSidebar from '../../components/student/StudentSidebar';
+import StudentProfile from '../../components/student/StudentProfile';
 import Logo from '../../components/common/Logo';
+
+const StudentMentorshipTab = () => {
+  const [loading, setLoading] = useState(true);
+  const [mentorData, setMentorData] = useState({ mentor: null, mentorNotes: [], announcements: [] });
+  const [aiChats, setAiChats] = useState([]);
+
+  useEffect(() => {
+    const fetchMentorship = async () => {
+      try {
+        setLoading(true);
+        const [mentoringRes, chatRes] = await Promise.all([
+          getStudentMentoring(),
+          getChatConversations()
+        ]);
+        setMentorData(mentoringRes.data || { mentor: null, mentorNotes: [], announcements: [] });
+        setAiChats(chatRes.data || []);
+      } catch (err) {
+        console.error('Failed to load mentorship info:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMentorship();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="py-20 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+        <span className="ml-2 text-slate-500 font-semibold text-sm">Synchronizing mentor details...</span>
+      </div>
+    );
+  }
+
+  const { mentor, mentorNotes, announcements } = mentorData;
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div>
+        <h2 className="text-3xl font-bold text-slate-800">Mentorship & Guidance</h2>
+        <p className="text-slate-500 mt-1">Track your mentoring progress, goals, recommendations, and bulletins</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left column: Mentor & AI Assistant Session History */}
+        <div className="space-y-6">
+          {/* Mentor Profile info */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Assigned Mentor</h3>
+            {mentor ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-amber-500 text-white rounded-xl flex items-center justify-center font-bold text-lg">
+                    {mentor.firstName?.charAt(0)}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-800">{mentor.firstName} {mentor.lastName}</h4>
+                    <p className="text-xs text-slate-500">{mentor.email}</p>
+                  </div>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-xl text-xs text-slate-600 font-medium">
+                  Your mentor helps guide your academic roadmap, assigns learning goals, and leaves constructive feedback.
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-6 text-slate-400">
+                <p className="text-sm font-semibold">No assigned mentor yet</p>
+                <p className="text-xs mt-1">Contact administration to match you with a mentor.</p>
+              </div>
+            )}
+          </div>
+
+          {/* AI Advisor Chat Logs */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">AI Assistant Conversations</h3>
+              <Link to="/ai-assistant" className="text-xs font-bold text-primary hover:underline">New Chat</Link>
+            </div>
+            <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+              {aiChats.map((chat, idx) => (
+                <div key={idx} className="p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-xs flex justify-between items-center group">
+                  <div>
+                    <p className="font-bold text-slate-700 truncate max-w-[150px]">{chat.title || 'Guidance Session'}</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">{new Date(chat.updatedAt).toLocaleDateString()}</p>
+                  </div>
+                  <span className="text-[10px] bg-white border border-slate-200 text-slate-500 px-2 py-0.5 rounded-full font-bold group-hover:border-primary group-hover:text-primary transition-colors">
+                    {chat.messages?.length || 0} messages
+                  </span>
+                </div>
+              ))}
+              {aiChats.length === 0 && (
+                <p className="text-slate-400 text-xs text-center py-6">No assistant history found.</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right column: Goals and Bulletins */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Goals Tracker */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <GraduationCap className="text-primary" size={20} /> Assigned Mentoring Goals
+            </h3>
+            <div className="space-y-4">
+              {mentorNotes.map((note, idx) => (
+                <div key={idx} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 transition-all">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h4 className="text-base font-bold text-slate-800">{note.goal}</h4>
+                      <p className="text-xs text-slate-400 mt-0.5">Assigned by Mentor {note.teacher?.firstName} {note.teacher?.lastName}</p>
+                    </div>
+                    <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">{note.progress}%</span>
+                  </div>
+                  <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden mb-4">
+                    <div className="h-full bg-gradient-to-r from-primary to-blue-400 rounded-full" style={{ width: `${note.progress}%` }}></div>
+                  </div>
+                  <div className="bg-white p-4 rounded-xl border border-slate-100 text-xs text-slate-600 space-y-1">
+                    <strong className="text-slate-800">Feedback Recommendation:</strong>
+                    <p className="whitespace-pre-wrap">{note.feedback}</p>
+                  </div>
+                </div>
+              ))}
+              {mentorNotes.length === 0 && (
+                <div className="text-center py-12 text-slate-400">
+                  <p className="text-sm font-semibold">No goals assigned by your mentor yet.</p>
+                  <p className="text-xs mt-1">Check back later or message your instructor.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Announcements Bulletins */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">Class Announcements</h3>
+            <div className="space-y-4 max-h-[350px] overflow-y-auto pr-1">
+              {announcements.map((ann, idx) => (
+                <div key={idx} className="p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-amber-200 transition-colors">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-bold text-slate-800 text-sm">{ann.title}</h4>
+                    <span className="text-[10px] text-slate-400">{new Date(ann.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">{ann.content}</p>
+                  <p className="text-[10px] text-slate-400 mt-2">Posted by Mentor {ann.teacher?.firstName} {ann.teacher?.lastName}</p>
+                </div>
+              ))}
+              {announcements.length === 0 && (
+                <p className="text-slate-400 text-xs text-center py-8">No current bulletins.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -20,6 +177,7 @@ const StudentDashboard = () => {
       setActiveTab(location.state.activeTab);
     }
   }, [location]);
+
   const [stats, setStats] = useState({
     enrolledCourses: 0,
     upcomingEvents: 0,
@@ -39,9 +197,16 @@ const StudentDashboard = () => {
   useEffect(() => {
     const userInfo = localStorage.getItem('userInfo');
     if (userInfo) {
-      setUser(JSON.parse(userInfo));
+      const parsed = JSON.parse(userInfo);
+      if (parsed.role !== 'student') {
+        navigate('/');
+        return;
+      }
+      setUser(parsed);
+    } else {
+      navigate('/student/login');
     }
-  }, []);
+  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('userInfo');
@@ -169,11 +334,12 @@ const StudentDashboard = () => {
             </div>
           </div>
         );
+      case 'profile': return <StudentProfile />;
       case 'courses': return <StudentCourses courses={studentData.enrolledCourses} />;
       case 'events': return <StudentEvents events={studentData.registeredEvents} />;
       case 'scholarships': return <StudentScholarships scholarships={studentData.scholarshipApplications} />;
       case 'jobs': return <StudentJobs jobs={studentData.appliedJobs} savedJobs={studentData.savedJobs} />;
-
+      case 'mentorship': return <StudentMentorshipTab />;
       case 'settings': return <StudentSettings user={user} />;
       default: return null;
     }
@@ -185,8 +351,9 @@ const StudentDashboard = () => {
 
       <main className="flex-1 flex flex-col min-w-0 bg-slate-50/50">
         <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-8 sticky top-0 z-30">
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center gap-1.5">
             <Logo size="sm" variant="light" />
+            <span className="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full uppercase">Student</span>
           </div>
 
           <div className="hidden md:block relative w-96">

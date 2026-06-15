@@ -1,6 +1,25 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const isLocalhost = Boolean(
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1' ||
+  window.location.hostname === '[::1]'
+);
+
+let baseURL = 'http://localhost:5000/api';
+
+if (!isLocalhost) {
+  baseURL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+} else {
+  const envURL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
+  if (envURL && (envURL.includes('localhost') || envURL.includes('127.0.0.1'))) {
+    baseURL = envURL;
+  }
+}
+
+if (baseURL && !baseURL.endsWith('/api') && !baseURL.endsWith('/api/')) {
+  baseURL = baseURL.replace(/\/$/, '') + '/api';
+}
 
 if (import.meta.env.DEV) {
   console.log(`[API CLIENT] Initialized with baseURL: ${baseURL}`);

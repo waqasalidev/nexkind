@@ -4,21 +4,94 @@ const Course = require('../models/Course');
 const Event = require('../models/Event');
 const Scholarship = require('../models/Scholarship');
 const Job = require('../models/Job');
+const ChatSettings = require('../models/ChatSettings');
+const Teacher = require('../models/Teacher');
+const Student = require('../models/Student');
+const StudentRecord = require('../models/StudentRecord');
+const MentorNote = require('../models/MentorNote');
+const Announcement = require('../models/Announcement');
+const AIHistory = require('../models/AIHistory');
+const scholarshipsData = require('./scholarshipsData');
+const jobsData = require('./jobsData');
+const { SYSTEM_FALLBACK } = require('../services/aiService');
 
 const seedData = async () => {
   try {
-    // 1. Seed Admin User
-    const adminExists = await User.findOne({ role: 'admin' });
-    if (!adminExists) {
+    // 1. Seed Default Accounts (Admin, Teacher, Student)
+    const defaultAdmin = await User.findOne({ email: 'admin@nexkind.com' });
+    if (!defaultAdmin) {
       await User.create({
         firstName: 'System',
         lastName: 'Admin',
-        email: 'admin@gmail.com',
-        password: 'test123',
+        email: 'admin@nexkind.com',
+        password: 'Admin@123',
         role: 'admin',
         status: 'Active'
       });
-      console.log('Default Admin Account Created: admin@gmail.com / test123');
+      console.log('Default Admin Account Created: admin@nexkind.com / Admin@123');
+    }
+
+    const defaultTeacher = await User.findOne({ email: 'teacher@nexkind.com' });
+    let teacherUser;
+    if (!defaultTeacher) {
+      teacherUser = await User.create({
+        firstName: 'Default',
+        lastName: 'Teacher',
+        email: 'teacher@nexkind.com',
+        password: 'Teacher@123',
+        role: 'teacher',
+        status: 'Active'
+      });
+      // Create teacher profile
+      await Teacher.create({
+        user: teacherUser._id,
+        department: 'Computer Science',
+        specialization: ['MERN Stack', 'AI Engineering']
+      });
+      console.log('Default Teacher Account Created: teacher@nexkind.com / Teacher@123');
+    } else {
+      teacherUser = defaultTeacher;
+    }
+
+    const defaultStudent = await User.findOne({ email: 'student@nexkind.com' });
+    if (!defaultStudent) {
+      const studentUser = await User.create({
+        firstName: 'Waqas',
+        lastName: 'Ali',
+        email: 'student@nexkind.com',
+        password: 'Student@123',
+        role: 'student',
+        status: 'Active'
+      });
+      // Create student profile
+      await Student.create({
+        user: studentUser._id,
+        educationLevel: 'Undergraduate',
+        university: 'NED University',
+        skills: ['JavaScript', 'HTML', 'CSS'],
+        interests: ['Web Development', 'AI/ML'],
+        mentor: teacherUser._id
+      });
+
+      // Create a default studentRecord
+      await StudentRecord.create({
+        student: studentUser._id,
+        educationLevel: 'Undergraduate',
+        university: 'NED University',
+        skills: ['JavaScript', 'HTML', 'CSS'],
+        interests: ['Web Development', 'AI/ML']
+      });
+
+      // Create a default goal/note for student
+      await MentorNote.create({
+        student: studentUser._id,
+        teacher: teacherUser._id,
+        goal: 'Learn MERN Stack',
+        progress: 70,
+        feedback: 'Focus on backend APIs and deployment.'
+      });
+
+      console.log('Default Student Account Created: student@nexkind.com / Student@123');
     }
 
     // 2. Seed Courses
@@ -193,167 +266,36 @@ const seedData = async () => {
        console.log('Dummy Events Added');
     }
 
-    // 4. Seed Scholarships
+    // 4. Seed Scholarships (ensure at least 50 entries)
     const scholarshipsCount = await Scholarship.countDocuments();
-    if (scholarshipsCount === 0) {
-      const dummyScholarships = [
-        {
-          title: 'Future Leaders Scholarship',
-          description: 'Awarding outstanding students who demonstrate leadership potential and academic excellence.',
-          provider: 'EduFoundation Global',
-          country: 'United States',
-          university: 'Harvard University',
-          category: 'Merit-based',
-          degreeLevel: 'Undergraduate',
-          fundingType: 'Partially Funded',
-          amount: '$5,000',
-          deadline: '2026-06-30',
-          eligibilityCriteria: [
-            'Must be a full-time student',
-            'Minimum GPA of 3.5',
-            'Demonstrated community leadership',
-          ],
-          requiredDocuments: [
-            'Academic Transcripts',
-            'Letter of Recommendation',
-            'Personal Statement',
-          ],
-          providerLink: 'https://example.com',
-          image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        },
-        {
-          title: 'Women in Technology Grant',
-          description: 'Supporting women pursuing degrees in Computer Science, Engineering, or Mathematics.',
-          provider: 'TechSisters',
-          country: 'United Kingdom',
-          university: 'Imperial College London',
-          category: 'Diversity',
-          degreeLevel: 'Masters',
-          fundingType: 'Fully Funded',
-          amount: '$3,000',
-          deadline: '2026-05-15',
-          eligibilityCriteria: [
-            'Female-identifying student',
-            'Enrolled in STEM program',
-          ],
-          requiredDocuments: [
-             'Proof of enrollment',
-             'Essay on "Women in Tech"',
-          ],
-          providerLink: 'https://example.com',
-          image: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        },
-        {
-          title: 'Need-Based Financial Aid',
-          description: 'Financial assistance for students from low-income backgrounds to help cover tuition and books.',
-          provider: 'Hope Alliance',
-          country: 'Canada',
-          university: 'University of Toronto',
-          category: 'Need-based',
-          degreeLevel: 'Undergraduate',
-          fundingType: 'Fully Funded',
-          amount: 'Full Tuition',
-          deadline: '2026-07-01',
-          eligibilityCriteria: [
-             'Demonstrated financial need',
-             'Resident of the country',
-          ],
-          requiredDocuments: [
-             'Tax returns or proof of income',
-             'Acceptance letter',
-          ],
-          providerLink: 'https://example.com',
-          image: 'https://images.unsplash.com/photo-1606761568499-6d2451b23c66?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        }
-      ];
-      await Scholarship.insertMany(dummyScholarships);
-      console.log('Dummy Scholarships Added');
+    if (scholarshipsCount < 50) {
+      await Scholarship.deleteMany({});
+      await Scholarship.insertMany(scholarshipsData);
+      console.log('Seeded 50+ Scholarships');
     }
 
-    // 5. Seed Jobs
+    // 5. Seed Jobs (ensure at least 50 entries)
     const jobsCount = await Job.countDocuments();
-    if (jobsCount === 0) {
-      const dummyJobs = [
-        {
-          title: 'Frontend Developer Intern',
-          description: 'We are looking for a passionate Frontend Developer Intern to assist in building modern web interfaces.',
-          company: 'Google',
-          location: 'Remote',
-          category: 'Technology',
-          workMode: 'Remote',
-          type: 'Internship',
-          salary: '$20 - $25 / hr',
-          experience: 'Entry Level',
-          responsibilities: [
-            'Assist in developing web pages using React',
-            'Fix bugs and improve UI performance',
-            'Collaborate with the design team',
-          ],
-          requirements: [
-            'Basic knowledge of HTML, CSS, JavaScript',
-            'Familiarity with React is a plus',
-            'Eagerness to learn',
-          ],
-          benefits: [
-            'Flexible working hours',
-            'Mentorship from senior devs',
-          ],
-          companyLink: 'https://google.com',
-          image: 'https://logo.clearbit.com/google.com',
-        },
-        {
-          title: 'Junior Marketing Associate',
-          description: 'Join our dynamic marketing team and help us reach new audiences through social media and content marketing.',
-          company: 'Microsoft',
-          location: 'New York, NY',
-          category: 'Marketing',
-          workMode: 'Hybrid',
-          type: 'Full-time',
-          salary: '$45k - $55k / yr',
-          experience: '1-2 Years',
-          responsibilities: [
-            'Manage social media accounts',
-            'Create engaging content',
-            'Analyze campaign performance',
-          ],
-          requirements: [
-            'Degree in Marketing or related field',
-            'Strong writing skills',
-          ],
-          benefits: [
-            'Health Insurance',
-            'Paid Time Off',
-          ],
-          companyLink: 'https://microsoft.com',
-          image: 'https://logo.clearbit.com/microsoft.com',
-        },
-        {
-          title: 'Python Developer',
-          description: 'Looking for a skilled Python developer to build scalable backend systems.',
-          company: 'Amazon',
-          location: 'Austin, TX',
-          category: 'Technology',
-          workMode: 'On-site',
-          type: 'Contract',
-          salary: '$60 - $80 / hr',
-          experience: 'Mid-Senior Level',
-          responsibilities: [
-            'Develop API endpoints',
-            'Optimize database queries',
-          ],
-          requirements: [
-            'Proficiency in Python and Django/Flask',
-            'Experience with SQL databases',
-          ],
-          benefits: [
-             'Remote work options',
-          ],
-          companyLink: 'https://amazon.com',
-          image: 'https://logo.clearbit.com/amazon.com',
-        }
-      ];
-      await Job.insertMany(dummyJobs);
-      console.log('Dummy Jobs Added');
+    if (jobsCount < 50) {
+      await Job.deleteMany({});
+      await Job.insertMany(jobsData);
+      console.log('Seeded 50+ Jobs');
+    }
+
+    // 6. Seed/Update ChatSettings
+    let settings = await ChatSettings.findOne();
+    if (!settings) {
+      await ChatSettings.create({
+        systemPrompt: SYSTEM_FALLBACK,
+        isEnabled: true,
+        modelProvider: 'auto'
+      });
+      console.log('Default ChatSettings Created');
+    } else {
+      settings.systemPrompt = SYSTEM_FALLBACK;
+      settings.isEnabled = true;
+      await settings.save();
+      console.log('ChatSettings System Prompt Updated');
     }
 
   } catch (error) {

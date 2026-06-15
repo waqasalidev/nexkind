@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import {
   Users, BookOpen, DollarSign, Bell,
-  CheckCircle, GraduationCap, User, Search, Briefcase, Calendar
+  CheckCircle, GraduationCap, User, Search, Briefcase, Calendar,
+  Award, Sparkles, UserPlus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getDashboardStats } from '../../api';
+import { getAdminAnalytics } from '../../api';
 import CourseManager from '../../components/admin/CourseManager';
 import EventManager from '../../components/admin/EventManager';
 import ScholarshipManager from '../../components/admin/ScholarshipManager';
@@ -18,21 +19,121 @@ import AdminSidebar from '../../components/admin/AdminSidebar';
 import Logo from '../../components/common/Logo';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
+const CustomAreaChart = ({ data = [], dataKey, color }) => {
+  if (!data || data.length === 0) return <div className="text-slate-400 text-sm text-center py-8">No growth data available</div>;
+
+  const maxVal = Math.max(...data.map(d => d[dataKey] || 0), 1) * 1.2;
+  const height = 180;
+  const width = 500;
+  const padding = { top: 20, right: 20, bottom: 30, left: 40 };
+
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+
+  const points = data.map((d, i) => {
+    const x = padding.left + (i / Math.max(data.length - 1, 1)) * chartWidth;
+    const val = d[dataKey] || 0;
+    const y = padding.top + chartHeight - (val / maxVal) * chartHeight;
+    return { x, y, val, label: d.name };
+  });
+
+  const pathD = points.length > 0 ? `M ${points[0].x} ${points[0].y} ` + points.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ') : '';
+  const fillD = points.length > 0 ? `${pathD} L ${points[points.length - 1].x} ${padding.top + chartHeight} L ${points[0].x} ${padding.top + chartHeight} Z` : '';
+
+  return (
+    <div className="relative">
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible">
+        {/* Y Axis Grid Lines */}
+        {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
+          const y = padding.top + chartHeight * ratio;
+          const labelVal = Math.round(maxVal * (1 - ratio));
+          return (
+            <g key={idx}>
+              <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#f1f5f9" strokeWidth="1" />
+              <text x={padding.left - 8} y={y + 4} textAnchor="end" className="text-[10px] fill-slate-400 font-medium">{labelVal}</text>
+            </g>
+          );
+        })}
+
+        {/* Fill Area */}
+        {fillD && <path d={fillD} fill={color} fillOpacity="0.1" />}
+        {/* Stroke Line */}
+        {pathD && <path d={pathD} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
+
+        {/* Data Points */}
+        {points.map((p, idx) => (
+          <g key={idx} className="group/dot cursor-pointer">
+            <circle cx={p.x} cy={p.y} r="4" fill="#ffffff" stroke={color} strokeWidth="2.5" className="transition-all duration-200 group-hover/dot:r-6 group-hover/dot:stroke-width-3" />
+            {/* Tooltip on hover */}
+            <g className="opacity-0 group-hover/dot:opacity-100 transition-opacity duration-200 pointer-events-none">
+              <rect x={p.x - 25} y={p.y - 32} width="50" height="22" rx="4" fill="#1e293b" />
+              <text x={p.x} y={p.y - 17} textAnchor="middle" fill="#ffffff" className="text-[10px] font-bold">{p.val}</text>
+            </g>
+          </g>
+        ))}
+
+        {/* X Axis Labels */}
+        {points.map((p, idx) => (
+          <text key={idx} x={p.x} y={height - 8} textAnchor="middle" className="text-[10px] fill-slate-400 font-medium">{p.label}</text>
+        ))}
+      </svg>
+    </div>
+  );
+};
+
+const CustomBarChart = ({ data = [], dataKey, color }) => {
+  if (!data || data.length === 0) return <div className="text-slate-400 text-sm text-center py-8">No data available</div>;
+
+  const maxVal = Math.max(...data.map(d => d[dataKey] || 0), 10);
+
+  return (
+    <div className="space-y-4">
+      {data.map((item, idx) => {
+        const value = item[dataKey] || 0;
+        const percentage = maxVal > 0 ? (value / maxVal) * 100 : 0;
+        return (
+          <div key={idx} className="space-y-1.5">
+            <div className="flex justify-between items-center text-xs font-semibold text-slate-700">
+              <span className="truncate max-w-[70%]" title={item.name}>{item.name}</span>
+              <span className="text-slate-500 font-bold">{value}</span>
+            </div>
+            <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-1000 ease-out"
+                style={{
+                  width: `${percentage}%`,
+                  backgroundColor: color,
+                  boxShadow: `0 0 8px ${color}40`
+                }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalUsers: 0,
-    activeCourses: 0,
-    totalEvents: 0,
-    activeJobs: 0,
-    scholarships: 0,
+    totalTeachers: 0,
+    totalCourses: 0,
+    totalScholarships: 0,
+    totalJobs: 0,
+    totalDonations: 0,
     totalRaised: 0,
-    totalEnrolled: 0,
-    totalAttendees: 0,
-    totalJobApplicants: 0,
-    totalScholarshipApplicants: 0
+    totalAiConversations: 0,
+    newRegistrations: 0
+  });
+  const [charts, setCharts] = useState({
+    userGrowth: [],
+    courseEnrollmentTrends: [],
+    scholarshipApplications: [],
+    jobApplications: []
   });
   const [user, setUser] = useState(null);
 
@@ -58,21 +159,11 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const { data } = await getDashboardStats();
-        setStats({
-          totalUsers: data.totalUsers || 0,
-          activeCourses: data.activeCourses || 0,
-          totalEvents: data.totalEvents || 0,
-          activeJobs: data.activeJobs || 0,
-          scholarships: data.scholarships || 0,
-          totalRaised: data.totalRaised || 0,
-          totalEnrolled: data.totalEnrolled || 0,
-          totalAttendees: data.totalAttendees || 0,
-          totalJobApplicants: data.totalJobApplicants || 0,
-          totalScholarshipApplicants: data.totalScholarshipApplicants || 0
-        });
+        const { data } = await getAdminAnalytics();
+        setStats(data.stats || {});
+        setCharts(data.charts || {});
       } catch (error) {
-        console.error('Error fetching stats:', error);
+        console.error('Error fetching analytics:', error);
       } finally {
         setLoading(false);
       }
@@ -97,26 +188,54 @@ const AdminDashboard = () => {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {[
-                    { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'bg-blue-500', sub: 'Active' },
-                    { label: 'Active Courses', value: stats.activeCourses, icon: BookOpen, color: 'bg-indigo-500', sub: `${stats.totalEnrolled} Enrolled` },
-                    { label: 'Donations Raised', value: `$${stats.totalRaised.toLocaleString()}`, icon: DollarSign, color: 'bg-green-500', sub: 'Total Fund' },
-                    { label: 'Scholarships', value: stats.scholarships, icon: GraduationCap, color: 'bg-orange-500', sub: `${stats.totalScholarshipApplicants} Applied` },
-                    { label: 'Events', value: stats.totalEvents, icon: Calendar, color: 'bg-pink-500', sub: `${stats.totalAttendees} Attendees` },
-                    { label: 'Active Jobs', value: stats.activeJobs, icon: Briefcase, color: 'bg-teal-500', sub: `${stats.totalJobApplicants} Applicants` }
-                  ].map((stat, i) => (
-                    <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="text-slate-500 text-sm font-medium mb-1">{stat.label}</p>
-                          <h3 className="text-3xl font-bold text-slate-800">{stat.value}</h3>
-                          {stat.sub && <p className="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wide">{stat.sub}</p>}
-                        </div>
-                        <div className={`p-3 rounded-xl ${stat.color} bg-opacity-10 text-white`}>
-                          <stat.icon size={24} className={`text-${stat.color.split('-')[1]}-600`} />
+                    { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'bg-blue-600', sub: `${stats.newRegistrations} New (30d)` },
+                    { label: 'Total Teachers', value: stats.totalTeachers, icon: GraduationCap, color: 'bg-emerald-600', sub: 'Assigned Mentors' },
+                    { label: 'Total Courses', value: stats.totalCourses, icon: BookOpen, color: 'bg-indigo-600', sub: 'Active Curriculum' },
+                    { label: 'Scholarships Available', value: stats.totalScholarships, icon: Award, color: 'bg-orange-600', sub: 'Financial Opportunities' },
+                    { label: 'Active Jobs', value: stats.totalJobs, icon: Briefcase, color: 'bg-teal-600', sub: 'Career Opportunities' },
+                    { label: 'Donations Amount', value: `$${stats.totalRaised.toLocaleString()}`, icon: DollarSign, color: 'bg-green-600', sub: `${stats.totalDonations} Donation Events` },
+                    { label: 'AI Conversations', value: stats.totalAiConversations, icon: Sparkles, color: 'bg-purple-600', sub: 'Conversations Active' },
+                    { label: 'New Registrations', value: stats.newRegistrations, icon: UserPlus, color: 'bg-pink-600', sub: 'Last 30 Days' }
+                  ].map((stat, i) => {
+                    const Icon = stat.icon || Users;
+                    return (
+                      <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="text-slate-500 text-sm font-medium mb-1">{stat.label}</p>
+                            <h3 className="text-3xl font-bold text-slate-800">{stat.value}</h3>
+                            {stat.sub && <p className="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wide">{stat.sub}</p>}
+                          </div>
+                          <div className={`p-3 rounded-xl ${stat.color} bg-opacity-10 text-slate-100`}>
+                            <Icon size={24} className={`text-${stat.color.split('-')[1]}-600`} />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
+                </div>
+
+                {/* Dashboard Charts */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-6">User Growth (Last 6 Months)</h3>
+                    <CustomAreaChart data={charts.userGrowth} dataKey="users" color="rgb(79, 70, 229)" />
+                  </div>
+
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-6">Course Enrollment Trends (Top Courses)</h3>
+                    <CustomBarChart data={charts.courseEnrollmentTrends} dataKey="enrolled" color="rgb(59, 130, 246)" />
+                  </div>
+
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-6">Scholarship Applications (Top Listings)</h3>
+                    <CustomBarChart data={charts.scholarshipApplications} dataKey="applied" color="rgb(249, 115, 22)" />
+                  </div>
+
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-6">Job Applications (Top Postings)</h3>
+                    <CustomBarChart data={charts.jobApplications} dataKey="applicants" color="rgb(20, 184, 166)" />
+                  </div>
                 </div>
 
                 <div className="grid lg:grid-cols-2 gap-8">
@@ -128,8 +247,8 @@ const AdminDashboard = () => {
                     <div className="space-y-4">
                       {[
                         { title: 'New User Registration', meta: 'Just now', type: 'User' },
-                        { title: 'Donation Received: $50', meta: '2 hours ago', type: 'Donation' },
-                        { title: 'New Course Added: Python Basics', meta: '5 hours ago', type: 'Course' }
+                        { title: 'Donation Received: $100', meta: '2 hours ago', type: 'Donation' },
+                        { title: 'New Course Added: Full Stack Web Development', meta: '5 hours ago', type: 'Course' }
                       ].map((item, i) => (
                         <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors group">
                           <div className="flex items-center gap-4">

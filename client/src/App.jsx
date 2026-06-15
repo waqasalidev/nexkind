@@ -82,11 +82,11 @@ function App() {
           */}
           <Route path="/student/login" element={<Login role="student" />} />
           <Route path="/student/register" element={<Register role="student" />} />
-          <Route path="/student/dashboard" element={<StudentDashboard />} />
-          <Route path="/student/courses/:id/learn" element={<CoursePlayer />} />
+          <Route path="/student/dashboard" element={<ProtectedRoute role="student"><StudentDashboard /></ProtectedRoute>} />
+          <Route path="/student/courses/:id/learn" element={<ProtectedRoute role="student"><CoursePlayer /></ProtectedRoute>} />
 
           <Route path="/teacher/login" element={<Login role="teacher" />} />
-          <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+          <Route path="/teacher/dashboard" element={<ProtectedRoute role="teacher"><TeacherDashboard /></ProtectedRoute>} />
 
 
           <Route path="/admin/login" element={<Login role="admin" />} />

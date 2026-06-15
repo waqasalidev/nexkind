@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminTable, { AdminModal, FormInput, ConfirmDialog } from './AdminComponents';
-import { getUsers, updateUser, deleteUser } from '../../api';
+import { getUsers, updateUser, deleteUser, createAdminUser } from '../../api';
 
 const UserManager = () => {
   const [users, setUsers] = useState([]);
@@ -57,14 +57,33 @@ const UserManager = () => {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      const response = await updateUser(currentUser._id, formData);
-      const updatedUser = response.data;
-      setUsers(users.map(u => u._id === currentUser._id ? updatedUser : u));
+      if (currentUser) {
+        const response = await updateUser(currentUser._id, formData);
+        const updatedUser = response.data;
+        setUsers(users.map(u => u._id === currentUser._id ? updatedUser : u));
+      } else {
+        const response = await createAdminUser(formData);
+        const newUser = response.data;
+        setUsers([newUser, ...users]);
+      }
       setIsModalOpen(false);
     } catch (error) {
       console.error(error);
-      alert('Failed to update user');
+      alert(currentUser ? 'Failed to update user' : 'Failed to create user');
     }
+  };
+
+  const handleAdd = () => {
+    setCurrentUser(null);
+    setFormData({
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      role: 'student',
+      status: 'Active'
+    });
+    setIsModalOpen(true);
   };
 
   const handleDelete = (id) => {
@@ -98,7 +117,7 @@ const UserManager = () => {
           title="User Management"
           columns={columns}
           data={filteredUsers}
-          onAdd={() => alert('User registration is done via sign up.')}
+          onAdd={handleAdd}
           onEdit={handleOpenModal}
           onDelete={(item) => handleDelete(item)}
           searchQuery={searchQuery}
@@ -106,13 +125,28 @@ const UserManager = () => {
         />
       )}
 
-      <AdminModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Edit User">
+      <AdminModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={currentUser ? "Edit User" : "Add User"}>
         <form onSubmit={handleSave}>
           <div className="grid grid-cols-2 gap-4">
             <FormInput label="First Name" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} />
             <FormInput label="Last Name" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} />
           </div>
-          <FormInput label="Email" value={formData.email} readOnly className="bg-slate-100 cursor-not-allowed" />
+          <FormInput 
+            label="Email" 
+            value={formData.email} 
+            readOnly={!!currentUser} 
+            className={currentUser ? "bg-slate-100 cursor-not-allowed" : ""}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          />
+          {!currentUser && (
+            <FormInput 
+              label="Password" 
+              type="password"
+              placeholder="Enter password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            />
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Role</label>

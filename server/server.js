@@ -17,6 +17,8 @@ const messageRoutes = require('./routes/messageRoutes');
 const donationRoutes = require('./routes/donationRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const teacherRoutes = require('./routes/teacherRoutes');
 const seedData = require('./utils/seeder');
 
 logAiConfig();
@@ -34,7 +36,7 @@ const allowedOrigins = [
   'http://127.0.0.1:5173',
   'https://nexkind.vercel.app',
   'https://nexkind.vercel.app/',
-].filter(Boolean);
+].filter(Boolean).map(origin => origin.replace(/\/$/, ''));
 
 app.use(cors({
   origin(origin, callback) {
@@ -62,6 +64,19 @@ app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
+app.get('/api/test-ai', async (req, res) => {
+  try {
+    const { generateAIResponse } = require('./services/aiService');
+    const result = await generateAIResponse([
+      { role: 'user', content: 'Say hello, tell me you are online in 5 words or less.' }
+    ]);
+    res.json({ success: true, result });
+  } catch (error) {
+    console.error('[TEST-AI] Error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/dashboard', dashboardRoutes);
@@ -73,6 +88,8 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/teacher', teacherRoutes);
 
 const PORT = process.env.PORT || 5000;
 

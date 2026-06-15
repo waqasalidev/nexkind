@@ -9,10 +9,16 @@ const {
   enrollCourse,
   applyScholarship,
   getStudentCourse,
-  updateCourseProgress
+  updateCourseProgress,
+  getStudentProfile,
+  updateStudentProfile,
+  getStudentMentorInfo
 } = require('../controllers/studentController');
 
 router.get('/dashboard', protect, getStudentDashboard);
+router.get('/profile', protect, getStudentProfile);
+router.put('/profile', protect, updateStudentProfile);
+router.get('/mentoring', protect, getStudentMentorInfo);
 router.post('/jobs/save/:id', protect, toggleSaveJob);
 router.post('/jobs/apply/:id', protect, applyJob);
 router.post('/events/register/:id', protect, registerEvent);

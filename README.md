@@ -253,4 +253,19 @@ This project is licensed under the **ISC License**.
 
 ---
 
+To sign in to the platform with any of the demo roles, navigate to the respective portals in your web browser:
+
+1. Admin Portal
+Login URL: http://localhost:5173/admin/login
+Email: admin@nexkind.com
+Password: Admin@123
+2. Teacher / Mentor Portal
+Login URL: http://localhost:5173/teacher/login
+Email: teacher@nexkind.com
+Password: Teacher@123
+3. Student / User Portal
+Login URL: http://localhost:5173/student/login
+Email: student@nexkind.com
+Password: Student@123
+
 *Verified and Documented for Final Year Project (FYP)*

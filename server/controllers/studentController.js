@@ -3,6 +3,9 @@ const Job = require('../models/Job');
 const Event = require('../models/Event');
 const Course = require('../models/Course');
 const Scholarship = require('../models/Scholarship');
+const Student = require('../models/Student');
+const MentorNote = require('../models/MentorNote');
+const Announcement = require('../models/Announcement');
 
 // @desc    Get student dashboard data (populated)
 // @route   GET /api/student/dashboard
@@ -214,6 +217,101 @@ const updateCourseProgress = async (req, res) => {
   }
 };
 
+// @desc    Get student profile info (university, skills, interests)
+// @route   GET /api/student/profile
+// @access  Private
+const getStudentProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password');
+    let profile = await Student.findOne({ user: req.user._id }).populate('mentor', 'firstName lastName email');
+    if (!profile) {
+      profile = await Student.create({
+        user: req.user._id
+      });
+    }
+    res.json({
+      user,
+      profile
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update student profile and academic details
+// @route   PUT /api/student/profile
+// @access  Private
+const updateStudentProfile = async (req, res) => {
+  try {
+    const { firstName, lastName, educationLevel, university, skills, interests } = req.body;
+    
+    // Update User Name
+    const user = await User.findById(req.user._id);
+    if (user) {
+      user.firstName = firstName || user.firstName;
+      user.lastName = lastName || user.lastName;
+      await user.save();
+    }
+
+    // Update or Create Student Profile
+    let studentProfile = await Student.findOne({ user: req.user._id });
+    if (!studentProfile) {
+      studentProfile = await Student.create({
+        user: req.user._id,
+        educationLevel,
+        university,
+        skills: skills || [],
+        interests: interests || []
+      });
+    } else {
+      if (educationLevel !== undefined) studentProfile.educationLevel = educationLevel;
+      if (university !== undefined) studentProfile.university = university;
+      if (skills !== undefined) studentProfile.skills = skills;
+      if (interests !== undefined) studentProfile.interests = interests;
+      await studentProfile.save();
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role
+      },
+      profile: studentProfile
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get student's mentoring feedback, goals, and announcements
+// @route   GET /api/student/mentoring
+// @access  Private
+const getStudentMentorInfo = async (req, res) => {
+  try {
+    const mentorNotes = await MentorNote.find({ student: req.user._id })
+      .populate('teacher', 'firstName lastName email')
+      .sort({ createdAt: -1 });
+
+    const studentProfile = await Student.findOne({ user: req.user._id }).populate('mentor', 'firstName lastName email');
+    const announcements = await Announcement.find({})
+      .populate('teacher', 'firstName lastName')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      mentorNotes,
+      mentor: studentProfile ? studentProfile.mentor : null,
+      announcements
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getStudentDashboard,
   toggleSaveJob,
@@ -222,5 +320,8 @@ module.exports = {
   enrollCourse,
   applyScholarship,
   getStudentCourse,
-  updateCourseProgress
+  updateCourseProgress,
+  getStudentProfile,
+  updateStudentProfile,
+  getStudentMentorInfo
 };

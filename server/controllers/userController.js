@@ -128,4 +128,31 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
-module.exports = { getUsers, deleteUser, getUserById, updateUser, updateUserProfile };
+// @desc    Create new user (by Admin)
+// @route   POST /api/users
+// @access  Private/Admin
+const createUser = async (req, res) => {
+  try {
+    const { firstName, lastName, email, password, role, status } = req.body;
+    const userExists = await User.findOne({ email });
+
+    if (userExists) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    const user = await User.create({
+      firstName,
+      lastName,
+      email,
+      password: password || 'Test@123',
+      role: role || 'student',
+      status: status || 'Active'
+    });
+
+    res.status(201).json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { getUsers, deleteUser, getUserById, updateUser, updateUserProfile, createUser };

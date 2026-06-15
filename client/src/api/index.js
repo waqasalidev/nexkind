@@ -82,3 +82,22 @@ export const deleteChatConversation = (id) =>
   api.delete(`/chat/conversations/${id}`, { headers: chatHeaders() });
 export const getAdminChatSettings = () => api.get('/chat/settings/admin');
 export const updateChatSettings = (data) => api.put('/chat/settings', data);
+
+// Advanced Admin Analytics & Management API
+export const getAdminAnalytics = () => api.get('/admin/analytics');
+export const createAdminUser = (data) => api.post('/users', data);
+
+// Dedicated Teacher / Mentor API
+export const getTeacherStudents = () => api.get('/teacher/students');
+export const getTeacherStudentRecord = (id) => api.get(`/teacher/students/${id}`);
+export const createTeacherGoal = (data) => api.post('/teacher/goals', data);
+export const updateTeacherGoal = (id, data) => api.put(`/teacher/goals/${id}`, data);
+export const deleteTeacherGoal = (id) => api.delete(`/teacher/goals/${id}`);
+export const createTeacherAnnouncement = (data) => api.post('/teacher/announcements', data);
+export const getTeacherAnnouncements = () => api.get('/teacher/announcements');
+export const assignStudentToSelf = (data) => api.post('/teacher/assign-student', data);
+
+// Student Profile & Mentorship API
+export const getStudentProfile = () => api.get('/student/profile');
+export const updateStudentProfile = (data) => api.put('/student/profile', data);
+export const getStudentMentoring = () => api.get('/student/mentoring');
