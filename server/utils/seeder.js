@@ -29,6 +29,10 @@ const seedData = async () => {
         status: 'Active'
       });
       console.log('Default Admin Account Created: admin@nexkind.com / Admin@123');
+    } else {
+      defaultAdmin.password = 'Admin@123';
+      await defaultAdmin.save();
+      console.log('Default Admin Password Reset: admin@nexkind.com / Admin@123');
     }
 
     const defaultTeacher = await User.findOne({ email: 'teacher@nexkind.com' });
@@ -51,6 +55,9 @@ const seedData = async () => {
       console.log('Default Teacher Account Created: teacher@nexkind.com / Teacher@123');
     } else {
       teacherUser = defaultTeacher;
+      defaultTeacher.password = 'Teacher@123';
+      await defaultTeacher.save();
+      console.log('Default Teacher Password Reset: teacher@nexkind.com / Teacher@123');
     }
 
     const defaultStudent = await User.findOne({ email: 'student@nexkind.com' });
@@ -92,6 +99,10 @@ const seedData = async () => {
       });
 
       console.log('Default Student Account Created: student@nexkind.com / Student@123');
+    } else {
+      defaultStudent.password = 'Student@123';
+      await defaultStudent.save();
+      console.log('Default Student Password Reset: student@nexkind.com / Student@123');
     }
 
     // 2. Seed Courses
