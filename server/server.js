@@ -34,8 +34,7 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  'https://nexkind.vercel.app',
-  'https://nexkind.vercel.app/',
+  'https://nexkiind.vercel.app/',
 ].filter(Boolean).map(origin => origin.replace(/\/$/, ''));
 
 app.use(cors({
