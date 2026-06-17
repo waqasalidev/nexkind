@@ -155,7 +155,7 @@ The comprehensive data model includes the following Mongoose collections:
 
 ## 🔗 API Documentation
 
-Base URL: `http://localhost:5000/api`
+Base URL: `https://nexkind.onrender.com/api`
 
 | Module | Method | Endpoint | Description |
 | :--- | :--- | :--- | :--- |
@@ -211,7 +211,7 @@ npm install
 ```
 Create a `.env` file in `client/` with:
 ```env
-VITE_API_BASE_URL=http://localhost:5000/api
+VITE_API_BASE_URL=https://nexkind.onrender.com/api
 ```
 Start the client:
 ```bash
@@ -234,7 +234,7 @@ npm run dev
 ### Client (`client/.env`)
 | Variable | Description | Example |
 | :--- | :--- | :--- |
-| `VITE_API_BASE_URL` | Base URL for backend API calls | `http://localhost:5000/api` |
+| `VITE_API_BASE_URL` | Base URL for backend API calls | `https://nexkind.onrender.com/api` |
 
 ---
 
@@ -255,17 +255,6 @@ This project is licensed under the **ISC License**.
 
 To sign in to the platform with any of the demo roles, navigate to the respective portals in your web browser:
 
-1. Admin Portal
-Login URL: http://localhost:5173/admin/login
-Email: admin@nexkind.com
-Password: Admin@123
-2. Teacher / Mentor Portal
-Login URL: http://localhost:5173/teacher/login
-Email: teacher@nexkind.com
-Password: Teacher@123
-3. Student / User Portal
-Login URL: http://localhost:5173/student/login
-Email: student@nexkind.com
-Password: Student@123
+
 
 *Verified and Documented for Final Year Project (FYP)*

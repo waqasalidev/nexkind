@@ -6,10 +6,10 @@ const isLocalhost = Boolean(
   window.location.hostname === '[::1]'
 );
 
-let baseURL = 'http://localhost:5000/api';
+let baseURL = 'https://nexkind.onrender.com/api';
 
 if (!isLocalhost) {
-  baseURL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  baseURL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://nexkind.onrender.com/api';
 } else {
   const envURL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
   if (envURL && (envURL.includes('localhost') || envURL.includes('127.0.0.1'))) {
