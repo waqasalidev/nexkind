@@ -14,7 +14,7 @@ const trim = (v) => (typeof v === 'string' ? v.trim() : '');
 
 const env = {
   port: process.env.PORT || 5000,
-  mongoUri: process.env.MONGO_URI,
+  mongoUri: process.env.MONGO_URI || process.env.MONGO_URL,
   jwtSecret: process.env.JWT_SECRET,
   nodeEnv: process.env.NODE_ENV || 'development',
   frontendUrl: process.env.FRONTEND_URL,

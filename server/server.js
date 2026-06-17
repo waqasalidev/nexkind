@@ -6,6 +6,7 @@ const cors = require('cors');
 const http = require('http');
 const connectDB = require('./config/db');
 const { logAiConfig } = require('./config/env');
+const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
@@ -30,20 +31,28 @@ connectDB().then(() => {
 const app = express();
 const server = http.createServer(app);
 
+const isProduction = process.env.NODE_ENV === 'production';
 const allowedOrigins = [
   process.env.FRONTEND_URL,
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'https://nexkiind.vercel.app/',
+  'https://nexkind.vercel.app',
+  'https://nexkiind.vercel.app',
 ].filter(Boolean).map(origin => origin.replace(/\/$/, ''));
 
 app.use(cors({
   origin(origin, callback) {
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
+    const normalizedOrigin = origin.replace(/\/$/, '');
+    
+    const isAllowed = allowedOrigins.includes(normalizedOrigin) ||
+      (!isProduction && (normalizedOrigin.includes('localhost') || normalizedOrigin.includes('127.0.0.1'))) ||
+      normalizedOrigin.endsWith('.vercel.app') ||
+      /https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(normalizedOrigin);
+
+    if (isAllowed) {
+      return callback(null, true);
+    } else {
       return callback(new Error(`CORS blocked origin: ${origin}`), false);
     }
-    return callback(null, true);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -89,6 +98,9 @@ app.use('/api/student', studentRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/teacher', teacherRoutes);
+
+app.use(notFound);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 

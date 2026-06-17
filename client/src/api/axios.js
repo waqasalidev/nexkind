@@ -3,18 +3,21 @@ import axios from 'axios';
 const isLocalhost = Boolean(
   window.location.hostname === 'localhost' ||
   window.location.hostname === '127.0.0.1' ||
-  window.location.hostname === '[::1]'
+  window.location.hostname === '[::1]' ||
+  window.location.port !== ''
 );
 
-let baseURL = 'https://nexkind.onrender.com/api';
+let baseURL = '';
 
-if (!isLocalhost) {
-  baseURL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://nexkind.onrender.com/api';
-} else {
+if (isLocalhost) {
   const envURL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
-  if (envURL && (envURL.includes('localhost') || envURL.includes('127.0.0.1'))) {
+  if (envURL && (envURL.includes('localhost') || envURL.includes('127.0.0.1') || envURL.includes('0.0.0.0'))) {
     baseURL = envURL;
+  } else {
+    baseURL = 'http://localhost:5000/api';
   }
+} else {
+  baseURL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://nexkind.onrender.com/api';
 }
 
 if (baseURL && !baseURL.endsWith('/api') && !baseURL.endsWith('/api/')) {
