@@ -26,6 +26,7 @@ const Navbar = () => {
     localStorage.removeItem('userInfo');
     setUser(null);
     setDropdownOpen(false);
+    setIsOpen(false);
     toast.success('Logged out successfully');
     navigate('/');
   };
@@ -143,7 +144,7 @@ const Navbar = () => {
               </div>
               <div>
                 <p className="font-bold text-slate-900">{user.firstName} {user.lastName}</p>
-                <p className="text-xs text-slate-500">{user.role || 'Student'}</p>
+                <p className="text-xs text-slate-500 capitalize">{user.role || 'Student'}</p>
               </div>
             </div>
           )}

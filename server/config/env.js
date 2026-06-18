@@ -2,7 +2,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 
 const envPath = path.join(__dirname, '..', '.env');
-const result = dotenv.config({ path: envPath });
+const result = dotenv.config({ path: envPath, override: true });
 
 if (result.error) {
   console.warn('[ENV] No .env file found at', envPath, '- using process environment only');
@@ -14,7 +14,7 @@ const trim = (v) => (typeof v === 'string' ? v.trim() : '');
 
 const env = {
   port: process.env.PORT || 5000,
-  mongoUri: process.env.MONGO_URI || process.env.MONGO_URL,
+  mongoUri: process.env.MONGO_URI,
   jwtSecret: process.env.JWT_SECRET,
   nodeEnv: process.env.NODE_ENV || 'development',
   frontendUrl: process.env.FRONTEND_URL,
