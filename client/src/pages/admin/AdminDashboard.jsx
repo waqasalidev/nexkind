@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   Users, BookOpen, DollarSign, Bell,
   CheckCircle, GraduationCap, User, Search, Briefcase, Calendar,
-  Award, Sparkles, UserPlus
+  Award, Sparkles, UserPlus, Menu, LogOut
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getAdminAnalytics } from '../../api';
@@ -117,6 +117,7 @@ const CustomBarChart = ({ data = [], dataKey, color }) => {
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -310,13 +311,22 @@ const AdminDashboard = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-inter">
-      <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} />
+      <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
       <main className="flex-1 flex flex-col min-w-0 bg-slate-50/50">
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-8 sticky top-0 z-30 transition-all">
-          <div className="md:hidden flex items-center gap-1.5">
-            <Logo size="sm" variant="light" />
-            <span className="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full uppercase tracking-wider">Admin</span>
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-30 transition-all">
+          <div className="flex items-center">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 -ml-2 mr-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors"
+              title="Open Menu"
+            >
+              <Menu size={24} />
+            </button>
+            <div className="md:hidden flex items-center gap-1.5">
+              <Logo size="sm" variant="light" />
+              <span className="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full uppercase tracking-wider">Admin</span>
+            </div>
           </div>
 
           <div className="hidden md:block relative w-96">
@@ -328,12 +338,21 @@ const AdminDashboard = () => {
             />
           </div>
 
-          <div className="flex items-center gap-6 ml-auto">
+          <div className="flex items-center gap-3 sm:gap-6 ml-auto">
             <button className="relative text-slate-500 hover:text-blue-600 transition-colors p-2 hover:bg-blue-50 rounded-full">
               <Bell size={20} />
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
-            <div className="flex items-center gap-3 pl-6 border-l border-slate-200">
+            
+            <button
+              onClick={handleLogout}
+              className="text-slate-500 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-full"
+              title="Logout"
+            >
+              <LogOut size={20} />
+            </button>
+
+            <div className="flex items-center gap-3 pl-3 sm:pl-6 border-l border-slate-200">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-bold text-slate-800">{user?.firstName} {user?.lastName}</p>
                 <p className="text-xs text-slate-500 capitalize">{user?.role || 'Admin'} User</p>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   BookOpen, Users, FileText, Settings, BarChart, LogOut, Bell, Plus,
   Trash2, Edit, Award, Briefcase, GraduationCap, Calendar, ChevronRight,
-  CheckCircle, Send, ArrowLeft, Loader
+  CheckCircle, Send, ArrowLeft, Loader, Menu, X
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../../components/common/Logo';
@@ -21,6 +21,7 @@ import {
 const TeacherDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState([]);
@@ -582,10 +583,26 @@ const TeacherDashboard = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-inter">
+      {/* Mobile Drawer Backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-72 bg-white border-r border-slate-200/60 flex flex-col hidden md:flex shadow-xl shadow-slate-200/40 z-20">
-        <div className="h-24 flex items-center px-8">
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200/60 flex flex-col shadow-xl shadow-slate-200/40 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:flex ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <div className="h-24 flex items-center justify-between px-8">
           <Logo size="md" variant="light" />
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="md:hidden text-slate-500 hover:text-slate-900 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+          >
+            <X size={20} />
+          </button>
         </div>
 
         <nav className="flex-1 p-6 space-y-2 overflow-y-auto custom-scrollbar">
@@ -601,6 +618,7 @@ const TeacherDashboard = () => {
               onClick={() => {
                 setActiveTab(item.id);
                 setSelectedStudent(null);
+                setSidebarOpen(false); // Close drawer on selection
               }}
               className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === item.id
                 ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30 translate-x-1'
@@ -622,10 +640,19 @@ const TeacherDashboard = () => {
 
       {/* Main Panel */}
       <main className="flex-1 flex flex-col min-w-0 bg-slate-50/50">
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-8 sticky top-0 z-30">
-          <div className="md:hidden flex items-center gap-1.5">
-            <Logo size="sm" variant="light" />
-            <span className="text-xs font-bold bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full uppercase">Teacher</span>
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-30">
+          <div className="flex items-center">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 -ml-2 mr-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors"
+              title="Open Menu"
+            >
+              <Menu size={24} />
+            </button>
+            <div className="md:hidden flex items-center gap-1.5">
+              <Logo size="sm" variant="light" />
+              <span className="text-xs font-bold bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full uppercase">Teacher</span>
+            </div>
           </div>
 
           <div className="flex items-center gap-6 ml-auto">

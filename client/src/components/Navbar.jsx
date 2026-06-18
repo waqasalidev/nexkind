@@ -55,7 +55,7 @@ const Navbar = () => {
         <Logo size="md" variant="light" />
 
         {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-8">
           <div className="flex gap-6">
             {navLinks.map((link) => (
               <NavLink
@@ -128,14 +128,14 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Toggle */}
-        <button className="md:hidden text-primary" onClick={toggleMenu}>
+        <button className="lg:hidden text-primary" onClick={toggleMenu}>
           {isOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
       </div>
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="absolute top-20 left-0 w-full bg-white border-t border-slate-100 shadow-lg p-6 flex flex-col gap-4 md:hidden animate-fade-in">
+        <div className="absolute top-20 left-0 w-full bg-white border-t border-slate-100 shadow-lg p-6 flex flex-col gap-4 lg:hidden animate-fade-in">
           {user && (
             <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
               <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold overflow-hidden">

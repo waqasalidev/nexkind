@@ -47,7 +47,7 @@ const Login = ({ role = 'student' }) => {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="glass max-w-md w-full space-y-8 p-10 rounded-2xl shadow-xl">
+      <div className="glass max-w-md w-full space-y-8 p-6 sm:p-10 rounded-2xl shadow-xl">
         <div className="text-center">
           <Logo size="lg" variant="light" className="justify-center mb-6" />
           <h2 className="text-3xl font-bold text-primary">{getRoleTitle(role)} Login</h2>

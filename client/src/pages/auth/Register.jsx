@@ -32,7 +32,7 @@ const Register = ({ role = 'student' }) => {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="glass max-w-md w-full space-y-8 p-10 rounded-2xl shadow-xl">
+      <div className="glass max-w-md w-full space-y-8 p-6 sm:p-10 rounded-2xl shadow-xl">
         <div className="text-center">
           <Logo size="lg" variant="light" className="justify-center mb-6" />
           <h1 className="text-3xl font-bold text-primary">{role === 'teacher' ? 'Teacher' : 'Student'} Registration</h1>
@@ -46,7 +46,7 @@ const Register = ({ role = 'student' }) => {
             </div>
           )}
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="firstName" className="sr-only">First Name</label>
                 <div className="relative">

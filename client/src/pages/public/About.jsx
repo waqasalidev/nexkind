@@ -33,7 +33,7 @@ const About = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-4xl md:text-6xl font-bold mb-6"
+            className="text-3xl sm:text-4xl md:text-6xl font-bold mb-6"
           >
             About NexKind
           </motion.h1>
@@ -65,7 +65,7 @@ const About = () => {
               <motion.div
                 key={i}
                 variants={fadeInUp}
-                className="bg-white p-10 rounded-2xl text-center shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-slate-100"
+                className="bg-white p-6 sm:p-10 rounded-2xl text-center shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-slate-100"
               >
                 <div className={`w-16 h-16 mx-auto ${item.bg} ${item.color} rounded-full flex items-center justify-center mb-6`}>
                   <item.icon size={32} />

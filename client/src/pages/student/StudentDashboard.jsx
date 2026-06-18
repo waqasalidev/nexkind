@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, Briefcase, User, Bell, Calendar, Search, Sparkles, GraduationCap } from 'lucide-react';
+import { BookOpen, Briefcase, User, Bell, Calendar, Search, Sparkles, GraduationCap, Menu } from 'lucide-react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { getStudentDashboard, getStudentMentoring, getChatConversations } from '../../api';
 import StudentCourses from '../../components/student/StudentCourses';
@@ -171,6 +171,7 @@ const StudentDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('overview');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (location.state?.activeTab) {
@@ -347,13 +348,22 @@ const StudentDashboard = () => {
 
   return (
     <div className="flex h-screen bg-slate-50/50 overflow-hidden font-inter">
-      <StudentSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} />
+      <StudentSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
       <main className="flex-1 flex flex-col min-w-0 bg-slate-50/50">
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-8 sticky top-0 z-30">
-          <div className="md:hidden flex items-center gap-1.5">
-            <Logo size="sm" variant="light" />
-            <span className="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full uppercase">Student</span>
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-30">
+          <div className="flex items-center">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 -ml-2 mr-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors"
+              title="Open Menu"
+            >
+              <Menu size={24} />
+            </button>
+            <div className="md:hidden flex items-center gap-1.5">
+              <Logo size="sm" variant="light" />
+              <span className="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full uppercase">Student</span>
+            </div>
           </div>
 
           <div className="hidden md:block relative w-96">

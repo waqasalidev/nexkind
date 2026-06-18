@@ -251,22 +251,36 @@ const AIChatAssistant = ({ embedded = false, onClose }) => {
     <div className={`${containerClass} flex bg-slate-950 text-white overflow-hidden`}>
       <AnimatePresence>
         {sidebarOpen && loggedIn && (
-          <motion.aside
-            initial={{ x: -280, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -280, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-            className="w-72 bg-slate-900/80 backdrop-blur-xl border-r border-white/10 flex flex-col shrink-0"
-          >
-            <div className="p-4 border-b border-white/10">
-              <button
-                type="button"
-                onClick={handleNewChat}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium transition-colors"
-              >
-                <Plus size={18} /> New Chat
-              </button>
-            </div>
+          <>
+            {/* Mobile Drawer Backdrop */}
+            <div
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm z-10 md:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
+            <motion.aside
+              initial={{ x: -280, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -280, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+              className="absolute md:relative left-0 top-0 h-full z-20 w-72 bg-slate-900/95 md:bg-slate-900/80 backdrop-blur-xl border-r border-white/10 flex flex-col shrink-0"
+            >
+              <div className="p-4 border-b border-white/10 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleNewChat}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium transition-colors"
+                >
+                  <Plus size={18} /> New Chat
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSidebarOpen(false)}
+                  className="md:hidden p-3 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+                  title="Close Sidebar"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
               {conversations.length === 0 && (
                 <p className="text-slate-500 text-sm text-center py-8 px-4">No saved chats yet</p>
@@ -296,6 +310,7 @@ const AIChatAssistant = ({ embedded = false, onClose }) => {
               ))}
             </div>
           </motion.aside>
+          </>
         )}
       </AnimatePresence>
 

@@ -44,7 +44,7 @@ const Contact = () => {
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="p-10 md:p-12 bg-white/60"
+              className="p-6 md:p-12 bg-white/60"
             >
               <h2 className="text-2xl font-bold text-primary mb-8">Send a Message</h2>
               {status === 'success' ? (
@@ -101,7 +101,7 @@ const Contact = () => {
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="bg-gradient-to-br from-primary to-primary-dark p-10 md:p-12 text-white flex flex-col justify-center relative overflow-hidden"
+              className="bg-gradient-to-br from-primary to-primary-dark p-6 md:p-12 text-white flex flex-col justify-center relative overflow-hidden"
             >
               <h2 className="text-2xl font-bold mb-8 relative z-10">Contact Information</h2>
 

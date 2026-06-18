@@ -36,7 +36,7 @@ const Home = () => {
             >
               🚀 Empowering the Future
             </motion.span>
-            <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 leading-tight tracking-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-slate-900 leading-tight tracking-tight">
               Bridge the Gap to <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Your Dream Career</span>
             </h1>
@@ -114,7 +114,7 @@ const Home = () => {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="flex flex-wrap justify-center gap-12 opacity-60 grayscale hover:grayscale-0 transition-all duration-500"
+            className="flex flex-wrap justify-center gap-6 sm:gap-12 opacity-60 grayscale hover:grayscale-0 transition-all duration-500"
           >
             {/* Dummy Logos with manual animation for simplicity or scroll effect could be added */}
             {['Google', 'Microsoft', 'Amazon', 'Coursera', 'Udemy', 'LinkedIn'].map((logo) => (
