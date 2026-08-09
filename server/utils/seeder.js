@@ -482,9 +482,10 @@ const seedData = async () => {
       console.log('Seeded 50+ Jobs with Deadlines and Skills');
     }
 
-    // 6. Seed Sample Donations
+    // 6. Seed Sample Donations across 5 Payment Providers
     const donationsCount = await Donation.countDocuments();
-    if (donationsCount === 0) {
+    if (donationsCount < 5) {
+      await Donation.deleteMany({});
       const dummyDonations = [
         {
           donorName: 'Alexander Hamilton',
@@ -502,23 +503,45 @@ const seedData = async () => {
           amount: 500,
           currency: 'USD',
           message: 'Sponsoring coding scholarships for women in engineering.',
-          paymentProvider: 'Stripe',
-          transactionId: 'txn_1002_stripe_demo',
+          paymentProvider: 'PayPal',
+          transactionId: 'paypal_ord_998120_demo',
           status: 'Completed',
+        },
+        {
+          donorName: 'Tariq Al-Mansoor',
+          email: 'tariq.mansoor@gmail.com',
+          amount: 1000,
+          currency: 'USD',
+          message: 'Bank wire transfer for Asian student laptops fund.',
+          paymentProvider: 'Bank Transfer',
+          bankReference: 'HBL-PAK-984120',
+          transactionId: 'bt_HBL-PAK-984120',
+          status: 'Verification Required',
+        },
+        {
+          donorName: 'Elena Rostova',
+          email: 'elena.rostova@global-aid.org',
+          amount: 750,
+          currency: 'USD',
+          message: 'Payoneer transfer for scholarship database maintenance.',
+          paymentProvider: 'Payoneer',
+          payoneerReference: 'PAY-REF-741952',
+          transactionId: 'payoneer_PAY-REF-741952',
+          status: 'Verification Required',
         },
         {
           donorName: 'David K. Miller',
           email: 'dmiller@gmail.com',
           amount: 100,
           currency: 'USD',
-          message: 'Keep up the great work!',
-          paymentProvider: 'Stripe',
-          transactionId: 'txn_1003_stripe_demo',
+          message: 'Google Pay quick donation!',
+          paymentProvider: 'Google Pay',
+          transactionId: 'gpay_txn_884120_demo',
           status: 'Completed',
         }
       ];
       await Donation.insertMany(dummyDonations);
-      console.log('Sample Donations Seeded');
+      console.log('Sample Donations across 5 Payment Providers Seeded');
     }
 
     // 7. Seed/Update ChatSettings

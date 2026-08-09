@@ -87,23 +87,32 @@ const Courses = () => {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="px-4 py-3 border border-slate-200 rounded-lg text-slate-600 focus:outline-none focus:border-primary bg-white w-full"
+            className="px-4 py-3 border border-slate-200 rounded-lg text-slate-600 focus:outline-none focus:border-primary bg-white w-full text-sm font-medium min-h-[44px]"
           >
             <option value="">All Categories</option>
-            {categories.map((c) => (
+            <option value="Technology">Technology & Software</option>
+            <option value="Design">Design & Media</option>
+            <option value="Business & Career">Business & Career</option>
+            <option value="Academic & General">Academic & General</option>
+            {categories.filter(c => !['Technology', 'Design', 'Business & Career', 'Academic & General'].includes(c)).map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
-          <select
-            value={skillLevel}
-            onChange={(e) => setSkillLevel(e.target.value)}
-            className="px-4 py-3 border border-slate-200 rounded-lg text-slate-600 focus:outline-none focus:border-primary bg-white w-full"
-          >
-            <option value="">All Skill Levels</option>
-            <option value="Beginner">Beginner</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Advanced">Advanced</option>
-          </select>
+
+          <div className="flex bg-slate-100 p-1 rounded-lg gap-1">
+            {['', 'Beginner', 'Intermediate', 'Expert'].map((lvl) => (
+              <button
+                key={lvl || 'All'}
+                type="button"
+                onClick={() => setSkillLevel(lvl)}
+                className={`flex-1 py-2 px-2 rounded text-xs font-bold transition-all min-h-[38px] ${
+                  skillLevel === lvl ? 'bg-primary text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {lvl || 'All Levels'}
+              </button>
+            ))}
+          </div>
         </motion.div>
 
         {loading ? (

@@ -6,11 +6,21 @@ const donationSchema = mongoose.Schema({
   amount: { type: Number, required: true },
   currency: { type: String, default: 'USD' },
   message: { type: String },
-  paymentProvider: { type: String, default: 'Stripe' },
+  paymentProvider: {
+    type: String,
+    enum: ['Stripe', 'PayPal', 'Google Pay', 'Bank Transfer', 'Payoneer'],
+    default: 'Stripe'
+  },
   transactionId: { type: String },
+  bankReference: { type: String },
+  payoneerReference: { type: String },
+  receiptUrl: { type: String },
+  verificationNotes: { type: String },
+  verifiedBy: { type: String },
+  verifiedAt: { type: Date },
   status: {
     type: String,
-    enum: ['Completed', 'Pending', 'Failed'],
+    enum: ['Completed', 'Pending', 'Processing', 'Failed', 'Cancelled', 'Verification Required'],
     default: 'Completed',
   },
 }, { timestamps: true });

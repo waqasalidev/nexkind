@@ -1464,9 +1464,231 @@ const jobsData = [
       "Option to extend contract",
       "Hardware provided"
     ],
-    companyLink: "https://okta.com",
-    applyLink: "https://careers.okta.com",
-    image: "https://logo.clearbit.com/okta.com"
+  },
+  // --- Asian & Global Regional Opportunities (Pakistan, India, Bangladesh, UAE, Remote) ---
+  {
+    title: "MERN Stack Engineer",
+    description: "Build robust web portals and microservices for fintech and educational initiatives in Pakistan.",
+    company: "10Pearls",
+    location: "Islamabad, Pakistan",
+    country: "Pakistan",
+    city: "Islamabad",
+    category: "Technology",
+    type: "Full-time",
+    workMode: "Hybrid",
+    salary: "PKR 180,000 - 250,000 / month",
+    experienceLevel: "Mid-level",
+    isPartnerListing: true,
+    responsibilities: [
+      "Develop responsive React components and Node.js REST APIs",
+      "Optimize MongoDB schemas and aggregation pipelines",
+      "Participate in daily agile standups and code reviews"
+    ],
+    requirements: [
+      "Bachelor degree in CS or equivalent experience",
+      "2+ years experience in React, Node.js, Express, MongoDB",
+      "Solid understanding of Git, REST, and JWT authentication"
+    ],
+    benefits: [
+      "Health insurance for family",
+      "Annual performance bonuses",
+      "Professional certification sponsorship"
+    ],
+    companyLink: "https://10pearls.com",
+    applyLink: "https://10pearls.com/careers",
+    image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80"
+  },
+  {
+    title: "Junior Frontend Developer",
+    description: "Join a fast-growing tech team building modern React web interfaces in Lahore.",
+    company: "Systems Limited",
+    location: "Lahore, Pakistan",
+    country: "Pakistan",
+    city: "Lahore",
+    category: "Technology",
+    type: "Full-time",
+    workMode: "On-site",
+    salary: "PKR 100,000 - 150,000 / month",
+    experienceLevel: "Entry-level",
+    isPartnerListing: true,
+    responsibilities: [
+      "Convert Figma design mockups into pixel-perfect React components",
+      "Fix UI layout bugs across mobile and desktop viewports",
+      "Integrate frontend forms with backend API endpoints"
+    ],
+    requirements: [
+      "Proficient in HTML, CSS, JavaScript (ES6+), and React",
+      "Familiarity with TailwindCSS or Bootstrap",
+      "Strong problem solving and team collaboration skills"
+    ],
+    benefits: [
+      "On-site gym and lunch facilities",
+      "Medical coverage",
+      "Career growth mentorship"
+    ],
+    companyLink: "https://systemsltd.com",
+    applyLink: "https://systemsltd.com/careers",
+    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80"
+  },
+  {
+    title: "Remote Python & AI Developer",
+    description: "Develop AI models, prompt processing routines, and data extraction pipelines for regional projects.",
+    company: "Contour Software",
+    location: "Karachi, Pakistan (Remote)",
+    country: "Pakistan",
+    city: "Karachi",
+    category: "AI/ML",
+    type: "Full-time",
+    workMode: "Remote",
+    salary: "PKR 220,000 - 320,000 / month",
+    experienceLevel: "Mid-level",
+    isPartnerListing: true,
+    responsibilities: [
+      "Build Python scripts using Pandas, NumPy, and PyTorch",
+      "Deploy AI endpoints via FastAPI / Flask",
+      "Integrate OpenAI and Gemini API SDKs"
+    ],
+    requirements: [
+      "BS in CS, Data Science, or AI",
+      "Strong Python coding capability",
+      "Knowledge of NLP and machine learning principles"
+    ],
+    benefits: [
+      "Work from home stipend",
+      "USD-indexed compensation adjustments",
+      "Health insurance"
+    ],
+    companyLink: "https://contour-software.com",
+    applyLink: "https://contour-software.com/careers",
+    image: "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=800&q=80"
+  },
+  {
+    title: "Full Stack Engineer (MERN / Next.js)",
+    description: "Develop scalable SaaS web platforms for clients across Asia and North America.",
+    company: "TCS Innovation Hub",
+    location: "Bangalore, India",
+    country: "India",
+    city: "Bangalore",
+    category: "Technology",
+    type: "Full-time",
+    workMode: "Hybrid",
+    salary: "INR 1,200,000 - 1,800,000 / year",
+    experienceLevel: "Mid-level",
+    isPartnerListing: true,
+    responsibilities: [
+      "Architect Next.js frontend pages and Node.js microservices",
+      "Design PostgreSQL and MongoDB databases",
+      "Ensure high performance and security compliance"
+    ],
+    requirements: [
+      "3+ years experience with React, Next.js, Node.js, and TypeScript",
+      "Experience with Docker and AWS deployment",
+      "Strong understanding of microservices architecture"
+    ],
+    benefits: [
+      "Comprehensive medical insurance for family",
+      "Learning and development allowance",
+      "Flexible work schedule"
+    ],
+    companyLink: "https://tcs.com",
+    applyLink: "https://tcs.com/careers",
+    image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80"
+  },
+  {
+    title: "Associate Software Engineer",
+    description: "Great entry-level opportunity for recent computer science graduates in Hyderabad.",
+    company: "Wipro Digital",
+    location: "Hyderabad, India",
+    country: "India",
+    city: "Hyderabad",
+    category: "Technology",
+    type: "Full-time",
+    workMode: "On-site",
+    salary: "INR 650,000 - 900,000 / year",
+    experienceLevel: "Entry-level",
+    isPartnerListing: true,
+    responsibilities: [
+      "Write clean, testable code in Java or JavaScript",
+      "Participate in code reviews and debugging sessions",
+      "Document application modules and APIs"
+    ],
+    requirements: [
+      "Degree in B.Tech / BE in Computer Science, IT, or Electrical",
+      "Solid knowledge of Data Structures and Object Oriented Programming",
+      "Basic SQL and Git experience"
+    ],
+    benefits: [
+      "Relocation allowance",
+      "Health & life insurance",
+      "Structured 6-month mentorship program"
+    ],
+    companyLink: "https://wipro.com",
+    applyLink: "https://wipro.com/careers",
+    image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&q=80"
+  },
+  {
+    title: "Junior Web Developer & Designer",
+    description: "Build modern web applications and UI layouts for international client projects in Dhaka.",
+    company: "Brain Station 23",
+    location: "Dhaka, Bangladesh",
+    country: "Bangladesh",
+    city: "Dhaka",
+    category: "Technology",
+    type: "Full-time",
+    workMode: "On-site",
+    salary: "BDT 45,000 - 70,000 / month",
+    experienceLevel: "Entry-level",
+    isPartnerListing: true,
+    responsibilities: [
+      "Develop responsive web pages using HTML, CSS, JavaScript, and React",
+      "Design clean Figma layouts and user flows",
+      "Ensure web accessibility and cross-browser support"
+    ],
+    requirements: [
+      "BSc in Computer Science or Software Engineering",
+      "Hands-on portfolio demonstrating HTML/CSS/JS or React work",
+      "Good command of English"
+    ],
+    benefits: [
+      "Two festival bonuses per year",
+      "Weekly team lunches and training sessions",
+      "Health insurance"
+    ],
+    companyLink: "https://brainstation-23.com",
+    applyLink: "https://brainstation-23.com/careers",
+    image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80"
+  },
+  {
+    title: "Global Remote Junior Software Developer",
+    description: "100% remote junior developer position supporting global non-profit and educational web infrastructure.",
+    company: "NexKind Global Partner Network",
+    location: "Remote (International)",
+    country: "Global",
+    city: "Remote",
+    category: "Technology",
+    type: "Remote",
+    workMode: "Remote",
+    salary: "$1,500 - $2,500 / month",
+    experienceLevel: "Entry-level",
+    isPartnerListing: true,
+    responsibilities: [
+      "Build and maintain open-source educational portals",
+      "Collaborate with international mentors across timezones",
+      "Write unit tests and maintain documentation"
+    ],
+    requirements: [
+      "Proficient in JavaScript, React, Node.js, and Git",
+      "Self-motivated with strong async communication in English",
+      "Passionate about education and non-profit technology"
+    ],
+    benefits: [
+      "100% remote flexibility from anywhere in Asia or worldwide",
+      "Equipment allowance",
+      "Direct pathway to senior engineering roles"
+    ],
+    companyLink: "https://nexkind.org",
+    applyLink: "https://nexkind.org/jobs",
+    image: "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&q=80"
   }
 ];
 

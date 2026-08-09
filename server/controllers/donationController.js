@@ -176,9 +176,136 @@ const deleteDonation = async (req, res) => {
   }
 };
 
+// @desc    Process PayPal Donation
+// @route   POST /api/donations/paypal
+// @access  Public
+const createPayPalDonation = async (req, res) => {
+  try {
+    const { donorName, email, amount, currency = 'USD', message, paypalOrderId } = req.body;
+
+    if (!donorName || !email || !amount) {
+      return res.status(400).json({ message: 'Donor name, email, and amount are required' });
+    }
+
+    const transactionId = paypalOrderId || `paypal_ord_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+    const donation = new Donation({
+      donorName,
+      email,
+      amount: Number(amount),
+      currency: currency.toUpperCase(),
+      message,
+      paymentProvider: 'PayPal',
+      transactionId,
+      status: 'Completed'
+    });
+
+    const saved = await donation.save();
+    res.status(201).json({ success: true, message: 'PayPal donation processed', donation: saved });
+  } catch (error) {
+    res.status(400).json({ message: 'PayPal processing error', error: error.message });
+  }
+};
+
+// @desc    Process Bank Transfer Donation (Requires Admin Verification)
+// @route   POST /api/donations/bank-transfer
+// @access  Public
+const createBankTransferDonation = async (req, res) => {
+  try {
+    const { donorName, email, amount, currency = 'USD', message, bankReference } = req.body;
+
+    if (!donorName || !email || !amount || !bankReference) {
+      return res.status(400).json({ message: 'Donor name, email, amount, and bank reference number are required' });
+    }
+
+    const donation = new Donation({
+      donorName,
+      email,
+      amount: Number(amount),
+      currency: currency.toUpperCase(),
+      message,
+      paymentProvider: 'Bank Transfer',
+      bankReference,
+      transactionId: `bt_${bankReference.trim()}`,
+      status: 'Verification Required'
+    });
+
+    const saved = await donation.save();
+    res.status(201).json({
+      success: true,
+      message: 'Bank transfer submitted for admin verification',
+      donation: saved
+    });
+  } catch (error) {
+    res.status(400).json({ message: 'Bank transfer submission failed', error: error.message });
+  }
+};
+
+// @desc    Process Payoneer Manual Donation (Requires Admin Verification)
+// @route   POST /api/donations/payoneer
+// @access  Public
+const createPayoneerDonation = async (req, res) => {
+  try {
+    const { donorName, email, amount, currency = 'USD', message, payoneerReference } = req.body;
+
+    if (!donorName || !email || !amount || !payoneerReference) {
+      return res.status(400).json({ message: 'Donor name, email, amount, and Payoneer transaction ID are required' });
+    }
+
+    const donation = new Donation({
+      donorName,
+      email,
+      amount: Number(amount),
+      currency: currency.toUpperCase(),
+      message,
+      paymentProvider: 'Payoneer',
+      payoneerReference,
+      transactionId: `payoneer_${payoneerReference.trim()}`,
+      status: 'Verification Required'
+    });
+
+    const saved = await donation.save();
+    res.status(201).json({
+      success: true,
+      message: 'Payoneer reference submitted for verification',
+      donation: saved
+    });
+  } catch (error) {
+    res.status(400).json({ message: 'Payoneer reference submission failed', error: error.message });
+  }
+};
+
+// @desc    Verify / Update Donation Status (Admin)
+// @route   PUT /api/donations/:id/verify
+// @access  Private/Admin
+const verifyDonation = async (req, res) => {
+  try {
+    const { status, verificationNotes } = req.body;
+    const donation = await Donation.findById(req.params.id);
+
+    if (!donation) {
+      return res.status(404).json({ message: 'Donation not found' });
+    }
+
+    donation.status = status || 'Completed';
+    if (verificationNotes) donation.verificationNotes = verificationNotes;
+    donation.verifiedBy = req.user ? req.user.email : 'Admin';
+    donation.verifiedAt = new Date();
+
+    const updated = await donation.save();
+    res.json({ success: true, message: 'Donation status updated', donation: updated });
+  } catch (error) {
+    res.status(400).json({ message: 'Failed to verify donation', error: error.message });
+  }
+};
+
 module.exports = {
   createPaymentIntent,
   createDonation,
+  createPayPalDonation,
+  createBankTransferDonation,
+  createPayoneerDonation,
+  verifyDonation,
   getDonations,
   getDonationStats,
   deleteDonation

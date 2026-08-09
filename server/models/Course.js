@@ -45,15 +45,19 @@ const courseSchema = mongoose.Schema({
   rating: { type: Number, default: 4.8 },
   duration: { type: String, required: true },
   totalLectures: { type: Number, default: 0 },
-  skillLevel: {
-    type: String,
-    enum: ['Beginner', 'Intermediate', 'Advanced'],
-    default: 'Beginner',
-  },
   language: { type: String, default: 'English' },
   price: { type: Number, default: 0 },
   studentsEnrolled: { type: Number, default: 0 },
-  category: { type: String, required: true },
+  category: {
+    type: String,
+    enum: ['Technology', 'Design', 'Business & Career', 'Academic & General', 'Web Development', 'Mobile Development', 'Data Science', 'AI & ML', 'Cybersecurity', 'UI/UX Design', 'General'],
+    default: 'Technology'
+  },
+  skillLevel: {
+    type: String,
+    enum: ['Beginner', 'Intermediate', 'Expert', 'All Levels'],
+    default: 'Beginner'
+  },
   aboutCourse: { type: String },
   whatYouWillLearn: [{ type: String }],
   skills: [{ type: String }],

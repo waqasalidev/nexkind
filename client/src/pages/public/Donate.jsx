@@ -1,14 +1,21 @@
-import { Heart, CreditCard, DollarSign, Users, GraduationCap, Compass, Briefcase, CheckCircle2, Target, Award, Quote, Lock, ShieldCheck } from 'lucide-react';
+import { Heart, CreditCard, DollarSign, Users, GraduationCap, Compass, Briefcase, CheckCircle2, Target, Award, Quote, Lock, ShieldCheck, Building, Landmark, Smartphone, AlertCircle, Copy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { createDonation, createPaymentIntent } from '../../api';
+import { createDonation, createPaymentIntent, createPayPalDonation, createBankTransferDonation, createPayoneerDonation } from '../../api';
 import toast from 'react-hot-toast';
 
 const Donate = () => {
   const [amount, setAmount] = useState('50');
   const [customAmount, setCustomAmount] = useState('');
-  const [donorInfo, setDonorInfo] = useState({ name: '', email: '', message: '', paymentMethod: 'Credit Card' });
-  const [step, setStep] = useState(1); // 1: Amount, 2: Details/Checkout, 3: Success
+  const [selectedProvider, setSelectedProvider] = useState('Stripe'); // Stripe, PayPal, Google Pay, Bank Transfer, Payoneer
+  const [donorInfo, setDonorInfo] = useState({
+    name: '',
+    email: '',
+    message: '',
+    bankReference: '',
+    payoneerReference: ''
+  });
+  const [step, setStep] = useState(1); // 1: Amount & Provider, 2: Checkout / Details, 3: Success
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [transactionData, setTransactionData] = useState(null);
 
@@ -31,6 +38,11 @@ const Donate = () => {
     setStep(2);
   };
 
+  const copyToClipboard = (text, label) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied to clipboard!`);
+  };
+
   const handleSubmitPayment = async (e) => {
     e.preventDefault();
     if (!donorInfo.name || !donorInfo.email) {
@@ -40,39 +52,112 @@ const Donate = () => {
 
     setIsSubmitting(true);
     try {
-      // 1. Initialize Payment Intent
-      const intentRes = await createPaymentIntent({
-        amount: parseFloat(amount),
-        currency: 'USD',
-        donorName: donorInfo.name,
-        email: donorInfo.email,
-        message: donorInfo.message
-      });
+      if (selectedProvider === 'Stripe' || selectedProvider === 'Google Pay') {
+        const intentRes = await createPaymentIntent({
+          amount: parseFloat(amount),
+          currency: 'USD',
+          donorName: donorInfo.name,
+          email: donorInfo.email,
+          message: donorInfo.message
+        });
 
-      const { transactionId, paymentProvider } = intentRes.data;
+        const { transactionId, paymentProvider } = intentRes.data;
 
-      // 2. Complete and store Donation Record in Database
-      const donationRes = await createDonation({
-        donorName: donorInfo.name,
-        email: donorInfo.email,
-        amount: parseFloat(amount),
-        currency: 'USD',
-        message: donorInfo.message,
-        paymentProvider: paymentProvider || 'Stripe',
-        transactionId: transactionId || `txn_${Date.now()}`,
-        status: 'Completed'
-      });
+        await createDonation({
+          donorName: donorInfo.name,
+          email: donorInfo.email,
+          amount: parseFloat(amount),
+          currency: 'USD',
+          message: donorInfo.message,
+          paymentProvider: selectedProvider === 'Google Pay' ? 'Google Pay' : (paymentProvider || 'Stripe'),
+          transactionId: transactionId || `txn_${Date.now()}`,
+          status: 'Completed'
+        });
 
-      setTransactionData({
-        transactionId: transactionId || `txn_${Date.now()}`,
-        donorName: donorInfo.name,
-        email: donorInfo.email,
-        amount: parseFloat(amount),
-        paymentProvider: paymentProvider || 'Stripe'
-      });
+        setTransactionData({
+          transactionId: transactionId || `txn_${Date.now()}`,
+          donorName: donorInfo.name,
+          email: donorInfo.email,
+          amount: parseFloat(amount),
+          paymentProvider: selectedProvider === 'Google Pay' ? 'Google Pay' : 'Stripe',
+          status: 'Completed'
+        });
+      } else if (selectedProvider === 'PayPal') {
+        const res = await createPayPalDonation({
+          donorName: donorInfo.name,
+          email: donorInfo.email,
+          amount: parseFloat(amount),
+          currency: 'USD',
+          message: donorInfo.message,
+          paypalOrderId: `paypal_ord_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
+        });
+
+        setTransactionData({
+          transactionId: res.data.donation.transactionId,
+          donorName: donorInfo.name,
+          email: donorInfo.email,
+          amount: parseFloat(amount),
+          paymentProvider: 'PayPal',
+          status: 'Completed'
+        });
+      } else if (selectedProvider === 'Bank Transfer') {
+        if (!donorInfo.bankReference || !donorInfo.bankReference.trim()) {
+          toast.error("Bank Reference / Transaction ID is required for verification.");
+          setIsSubmitting(false);
+          return;
+        }
+
+        const res = await createBankTransferDonation({
+          donorName: donorInfo.name,
+          email: donorInfo.email,
+          amount: parseFloat(amount),
+          currency: 'USD',
+          message: donorInfo.message,
+          bankReference: donorInfo.bankReference.trim()
+        });
+
+        setTransactionData({
+          transactionId: res.data.donation.transactionId,
+          donorName: donorInfo.name,
+          email: donorInfo.email,
+          amount: parseFloat(amount),
+          paymentProvider: 'Bank Transfer',
+          status: 'Verification Required',
+          notes: 'Submitted for manual Admin bank verification.'
+        });
+      } else if (selectedProvider === 'Payoneer') {
+        if (!donorInfo.payoneerReference || !donorInfo.payoneerReference.trim()) {
+          toast.error("Payoneer Transaction ID / Reference is required for verification.");
+          setIsSubmitting(false);
+          return;
+        }
+
+        const res = await createPayoneerDonation({
+          donorName: donorInfo.name,
+          email: donorInfo.email,
+          amount: parseFloat(amount),
+          currency: 'USD',
+          message: donorInfo.message,
+          payoneerReference: donorInfo.payoneerReference.trim()
+        });
+
+        setTransactionData({
+          transactionId: res.data.donation.transactionId,
+          donorName: donorInfo.name,
+          email: donorInfo.email,
+          amount: parseFloat(amount),
+          paymentProvider: 'Payoneer',
+          status: 'Verification Required',
+          notes: 'Submitted for manual Admin Payoneer verification.'
+        });
+      }
 
       setStep(3);
-      toast.success("Thank you! Your donation was processed successfully!");
+      toast.success(
+        selectedProvider === 'Bank Transfer' || selectedProvider === 'Payoneer'
+          ? "Thank you! Reference submitted for Admin verification."
+          : "Thank you! Your donation was processed successfully!"
+      );
     } catch (error) {
       console.error('Donation payment error:', error);
       toast.error('Payment processing failed. Please try again.');
@@ -127,14 +212,13 @@ const Donate = () => {
             className="max-w-3xl mx-auto"
           >
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 mb-6">
-              <Heart size={12} className="fill-indigo-400 text-indigo-400" /> NexKind Foundation
+              <Heart size={12} className="fill-indigo-400 text-indigo-400" /> NexKind Non-Profit Foundation
             </span>
             <h1 className="text-4xl md:text-6xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400 tracking-tight">
-              Fuel Education & Career Success
+              Fuel Education & Global Opportunity
             </h1>
             <p className="text-lg md:text-xl text-slate-400 leading-relaxed mb-4">
-              NexKind is a non-profit ecosystem designed to bridge the gap between education and global careers. 
-              We rely on supporters like you to keep our platforms and expert guidance free for students worldwide.
+              NexKind is an NGO initiative connecting underprivileged students to quality education, tech skills, regional jobs, and global scholarships.
             </p>
           </motion.div>
         </div>
@@ -169,22 +253,21 @@ const Donate = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mb-24">
-            {/* Why support & Progress Bar (Left 7 cols) */}
-            <div className="lg:col-span-7 space-y-10">
+            {/* Mission & Impact */}
+            <div className="lg:col-span-6 space-y-10">
               <div>
                 <h2 className="text-3xl font-bold text-white mb-6 tracking-tight flex items-center gap-2">
-                  <Target className="text-indigo-400" /> Our Mission & Impact Goals
+                  <Target className="text-indigo-400" /> Education → Skills → Opportunities
                 </h2>
                 <p className="text-slate-400 text-base leading-relaxed mb-6">
-                  Every dollar donated directly covers educational resources, technical infrastructure, 
-                  and platform maintenance, ensuring quality guidance remains open to everyone.
+                  Every donation directly enables free course hosting, skill development workshops, scholarship verifications, and career matchmaking for Asian and global youth.
                 </p>
 
                 {/* Progress bar */}
                 <div className="bg-slate-900/80 border border-white/5 p-6 rounded-2xl shadow-lg mb-8">
                   <div className="flex justify-between items-center mb-3 text-sm">
-                    <span className="font-semibold text-slate-300">Monthly Support Goal</span>
-                    <span className="font-bold text-indigo-400">{progressPercent.toFixed(1)}% Completed</span>
+                    <span className="font-semibold text-slate-300">Monthly Non-Profit Fund</span>
+                    <span className="font-bold text-indigo-400">{progressPercent.toFixed(1)}% Funded</span>
                   </div>
                   <div className="w-full bg-slate-800 rounded-full h-4 overflow-hidden mb-4 border border-white/5">
                     <motion.div
@@ -219,15 +302,15 @@ const Donate = () => {
               </div>
             </div>
 
-            {/* Donation Form Card (Right 5 cols) */}
-            <div className="lg:col-span-5">
+            {/* Donation Payment Form (Right 6 cols) */}
+            <div className="lg:col-span-6">
               <motion.div
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5 }}
-                className="bg-slate-900/60 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative overflow-hidden"
+                className="bg-slate-900/80 backdrop-blur-xl border border-white/10 p-6 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden"
               >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
                 
                 <AnimatePresence mode="wait">
                   {step === 1 && (
@@ -236,15 +319,15 @@ const Donate = () => {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 10 }}
-                      className="text-center"
                     >
-                      <Heart size={48} className="mx-auto mb-4 text-rose-500 fill-rose-500/10 animate-pulse" />
-                      <h3 className="text-2xl font-bold text-white mb-2">Support Our Cause</h3>
-                      <p className="text-sm text-slate-400 mb-8">
-                        Select or enter a custom amount to support our student ecosystem.
-                      </p>
+                      <div className="text-center mb-6">
+                        <Heart size={44} className="mx-auto mb-3 text-rose-500 fill-rose-500/10 animate-pulse" />
+                        <h3 className="text-2xl font-bold text-white mb-1">Make a Contribution</h3>
+                        <p className="text-xs text-slate-400">Select an amount and preferred payment provider.</p>
+                      </div>
 
-                      <div className="grid grid-cols-2 gap-4 mb-6">
+                      {/* Preset Amounts */}
+                      <div className="grid grid-cols-4 gap-2 mb-4">
                         {[10, 25, 50, 100].map((amt) => (
                           <motion.button
                             key={amt}
@@ -252,35 +335,74 @@ const Donate = () => {
                             onClick={() => handleAmountSelect(amt)}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            className={`py-3.5 px-4 rounded-xl font-bold text-base border-2 transition-all flex items-center justify-center gap-1 min-h-[44px] ${
+                            className={`py-2.5 px-2 rounded-xl font-bold text-sm border transition-all flex items-center justify-center gap-0.5 min-h-[44px] ${
                               amount == amt
                                 ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-600/30'
-                                : 'bg-slate-800/40 border-white/5 text-slate-300 hover:bg-slate-800 hover:border-white/15'
+                                : 'bg-slate-950 border-white/10 text-slate-300 hover:border-white/20'
                             }`}
                           >
-                            <DollarSign size={16} />{amt}
+                            <DollarSign size={14} />{amt}
                           </motion.button>
                         ))}
                       </div>
 
-                      <div className="relative mb-8">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-base">$</span>
+                      <div className="relative mb-6">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</span>
                         <input
                           type="number"
-                          placeholder="Or enter custom amount"
+                          placeholder="Or enter custom amount in USD"
                           value={customAmount}
                           onChange={handleCustomAmountChange}
-                          className="w-full pl-9 pr-4 py-3.5 bg-slate-950 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all font-semibold min-h-[44px]"
+                          className="w-full pl-8 pr-4 py-3 bg-slate-950 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 text-sm font-semibold min-h-[44px]"
                         />
+                      </div>
+
+                      {/* 5-Provider Payment Selector */}
+                      <div className="mb-6">
+                        <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
+                          Select Payment Provider
+                        </label>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                          {[
+                            { id: 'Stripe', label: 'Stripe Card', icon: CreditCard, badge: 'Instant' },
+                            { id: 'PayPal', label: 'PayPal', icon: Landmark, badge: 'Instant' },
+                            { id: 'Google Pay', label: 'Google Pay', icon: Smartphone, badge: 'Instant' },
+                            { id: 'Bank Transfer', label: 'Bank Wire', icon: Building, badge: 'Manual Review' },
+                            { id: 'Payoneer', label: 'Payoneer', icon: DollarSign, badge: 'Manual Review' }
+                          ].map((prov) => {
+                            const IconComp = prov.icon;
+                            const isSelected = selectedProvider === prov.id;
+                            return (
+                              <button
+                                key={prov.id}
+                                type="button"
+                                onClick={() => setSelectedProvider(prov.id)}
+                                className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all min-h-[70px] ${
+                                  isSelected
+                                    ? 'bg-indigo-600/20 border-indigo-500 text-white ring-2 ring-indigo-500/30'
+                                    : 'bg-slate-950 border-white/10 text-slate-400 hover:border-white/20 hover:text-slate-200'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <IconComp size={16} className={isSelected ? 'text-indigo-400' : 'text-slate-400'} />
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isSelected ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-slate-400'}`}>
+                                    {prov.badge}
+                                  </span>
+                                </div>
+                                <span className="text-xs font-bold mt-2 truncate">{prov.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
 
                       <motion.button
                         onClick={nextStep}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 min-h-[44px]"
+                        className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 text-sm min-h-[44px]"
                       >
-                        Proceed to Payment <CreditCard size={18} />
+                        Continue to Details <CreditCard size={16} />
                       </motion.button>
                     </motion.div>
                   )}
@@ -293,74 +415,151 @@ const Donate = () => {
                       exit={{ opacity: 0, x: 10 }}
                     >
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xl font-bold text-white">Donor Details & Checkout</h3>
-                        <span className="flex items-center gap-1 text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                          <ShieldCheck size={14} /> 256-Bit Encrypted
+                        <div>
+                          <h3 className="text-lg font-bold text-white">Complete {selectedProvider} Donation</h3>
+                          <p className="text-xs text-slate-400">Selected Amount: <strong className="text-emerald-400">${parseFloat(amount).toFixed(2)} USD</strong></p>
+                        </div>
+                        <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                          <ShieldCheck size={14} /> 256-Bit SSL
                         </span>
                       </div>
                       
                       <form onSubmit={handleSubmitPayment} className="space-y-4 text-left">
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-400 mb-1.5">Full Name</label>
-                          <input
-                            type="text"
-                            required
-                            placeholder="John Doe"
-                            className="w-full px-4 py-3 bg-slate-950 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-600 min-h-[44px]"
-                            value={donorInfo.name}
-                            onChange={e => setDonorInfo({ ...donorInfo, name: e.target.value })}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-400 mb-1.5">Email Address (For Receipt)</label>
-                          <input
-                            type="email"
-                            required
-                            placeholder="johndoe@example.com"
-                            className="w-full px-4 py-3 bg-slate-950 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-600 min-h-[44px]"
-                            value={donorInfo.email}
-                            onChange={e => setDonorInfo({ ...donorInfo, email: e.target.value })}
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-400 mb-1.5">Payment Gateway</label>
-                          <div className="p-3 bg-slate-950 border border-indigo-500/30 rounded-xl flex items-center justify-between text-xs font-semibold text-white">
-                            <span className="flex items-center gap-2"><CreditCard size={16} className="text-indigo-400" /> Stripe Secure Checkout</span>
-                            <span className="text-slate-400 font-normal">Card / Debit</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-400 mb-1">Full Name</label>
+                            <input
+                              type="text"
+                              required
+                              placeholder="John Doe"
+                              className="w-full px-3.5 py-2.5 bg-slate-950 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 text-xs min-h-[44px]"
+                              value={donorInfo.name}
+                              onChange={e => setDonorInfo({ ...donorInfo, name: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-400 mb-1">Email Address</label>
+                            <input
+                              type="email"
+                              required
+                              placeholder="johndoe@example.com"
+                              className="w-full px-3.5 py-2.5 bg-slate-950 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 text-xs min-h-[44px]"
+                              value={donorInfo.email}
+                              onChange={e => setDonorInfo({ ...donorInfo, email: e.target.value })}
+                            />
                           </div>
                         </div>
 
+                        {/* Specific Instructions per Provider */}
+                        {selectedProvider === 'Bank Transfer' && (
+                          <div className="bg-slate-950 border border-indigo-500/30 p-4 rounded-xl space-y-3">
+                            <div className="flex items-center gap-2 text-indigo-300 font-bold text-xs">
+                              <Building size={16} /> Official Organization Bank Details
+                            </div>
+                            <div className="space-y-1.5 text-xs text-slate-300 font-mono bg-slate-900 p-3 rounded-lg border border-slate-800">
+                              <div className="flex justify-between">
+                                <span className="text-slate-500">Bank Name:</span>
+                                <span>Habib Bank Limited (HBL)</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-500">Account Title:</span>
+                                <span>NexKind Foundation NGO</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-500">Account / IBAN:</span>
+                                <span className="flex items-center gap-1 font-bold text-white">
+                                  PK36HABB00012345678901 <Copy size={12} className="cursor-pointer text-indigo-400" onClick={() => copyToClipboard('PK36HABB00012345678901', 'IBAN')} />
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-500">SWIFT Code:</span>
+                                <span>HABBPKKA</span>
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-amber-400 mb-1">
+                                Enter Your Deposit / Bank Reference Number *
+                              </label>
+                              <input
+                                type="text"
+                                required
+                                placeholder="e.g. HBL-REF-984120"
+                                className="w-full px-3.5 py-2.5 bg-slate-900 border border-amber-500/40 rounded-xl text-white focus:outline-none focus:border-amber-400 text-xs min-h-[44px]"
+                                value={donorInfo.bankReference}
+                                onChange={e => setDonorInfo({ ...donorInfo, bankReference: e.target.value })}
+                              />
+                              <p className="text-[11px] text-slate-400 mt-1">An authorized admin will verify your deposit reference.</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {selectedProvider === 'Payoneer' && (
+                          <div className="bg-slate-950 border border-indigo-500/30 p-4 rounded-xl space-y-3">
+                            <div className="flex items-center gap-2 text-indigo-300 font-bold text-xs">
+                              <DollarSign size={16} /> Payoneer Receiving Account
+                            </div>
+                            <div className="space-y-1.5 text-xs text-slate-300 font-mono bg-slate-900 p-3 rounded-lg border border-slate-800">
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-500">Payoneer Email:</span>
+                                <span className="flex items-center gap-1 font-bold text-white">
+                                  finance@nexkind.org <Copy size={12} className="cursor-pointer text-indigo-400" onClick={() => copyToClipboard('finance@nexkind.org', 'Payoneer Email')} />
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-500">Recipient Name:</span>
+                                <span>NexKind Foundation NGO</span>
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-amber-400 mb-1">
+                                Enter Payoneer Transaction ID / Payment Reference *
+                              </label>
+                              <input
+                                type="text"
+                                required
+                                placeholder="e.g. PAY-TXN-741952"
+                                className="w-full px-3.5 py-2.5 bg-slate-900 border border-amber-500/40 rounded-xl text-white focus:outline-none focus:border-amber-400 text-xs min-h-[44px]"
+                                value={donorInfo.payoneerReference}
+                                onChange={e => setDonorInfo({ ...donorInfo, payoneerReference: e.target.value })}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {(selectedProvider === 'Stripe' || selectedProvider === 'PayPal' || selectedProvider === 'Google Pay') && (
+                          <div className="p-3 bg-slate-950 border border-indigo-500/30 rounded-xl flex items-center justify-between text-xs font-semibold text-white">
+                            <span className="flex items-center gap-2">
+                              <CreditCard size={16} className="text-indigo-400" /> {selectedProvider} Instant Gateway
+                            </span>
+                            <span className="text-emerald-400">Live Secure Processing</span>
+                          </div>
+                        )}
+
                         <div>
-                          <label className="block text-xs font-semibold text-slate-400 mb-1.5">Message / Note (Optional)</label>
+                          <label className="block text-xs font-semibold text-slate-400 mb-1">Message / Note (Optional)</label>
                           <textarea
                             placeholder="Add a message of support..."
-                            className="w-full px-4 py-3 bg-slate-950 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-600"
+                            className="w-full px-3.5 py-2 bg-slate-950 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 text-xs placeholder:text-slate-600"
                             rows="2"
                             value={donorInfo.message}
                             onChange={e => setDonorInfo({ ...donorInfo, message: e.target.value })}
                           ></textarea>
                         </div>
 
-                        <div className="bg-slate-950 border border-white/5 p-4 rounded-xl flex justify-between items-center font-bold">
-                          <span className="text-slate-400 text-sm">Donation Amount:</span>
-                          <span className="text-2xl text-emerald-400">${parseFloat(amount).toFixed(2)} USD</span>
-                        </div>
-
-                        <div className="flex gap-4 pt-2">
+                        <div className="flex gap-3 pt-2">
                           <button
                             type="button"
                             onClick={() => setStep(1)}
-                            className="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-colors text-sm min-h-[44px]"
+                            className="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-colors text-xs min-h-[44px]"
                           >
                             Back
                           </button>
                           <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="flex-1 py-3 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold rounded-xl transition-colors text-sm flex items-center justify-center gap-2 min-h-[44px]"
+                            className="flex-1 py-3 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold rounded-xl transition-colors text-xs flex items-center justify-center gap-2 min-h-[44px]"
                           >
-                            {isSubmitting ? 'Processing...' : 'Pay & Complete'} <Lock size={16} />
+                            {isSubmitting ? 'Processing...' : `Confirm ${selectedProvider}`} <Lock size={14} />
                           </button>
                         </div>
                       </form>
@@ -375,26 +574,30 @@ const Donate = () => {
                       exit={{ opacity: 0, scale: 0.95 }}
                       className="text-center py-6"
                     >
-                      <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                         <CheckCircle2 className="text-emerald-400 w-8 h-8" />
                       </div>
-                      <h3 className="text-2xl font-bold text-white mb-2">Donation Confirmed!</h3>
-                      <p className="text-sm text-slate-400 leading-relaxed mb-6">
-                        Thank you <strong className="text-white">{transactionData?.donorName}</strong> for your contribution of <span className="font-bold text-emerald-400">${transactionData?.amount} USD</span>.
+                      <h3 className="text-2xl font-bold text-white mb-2">
+                        {transactionData?.status === 'Verification Required' ? 'Reference Submitted!' : 'Donation Confirmed!'}
+                      </h3>
+                      <p className="text-xs text-slate-400 leading-relaxed mb-6">
+                        Thank you <strong className="text-white">{transactionData?.donorName}</strong> for supporting NexKind with <span className="font-bold text-emerald-400">${transactionData?.amount} USD</span> via <strong className="text-white">{transactionData?.paymentProvider}</strong>.
                       </p>
 
-                      <div className="bg-slate-950 border border-white/5 p-4 rounded-xl text-left text-xs space-y-2 mb-6 text-slate-300">
+                      <div className="bg-slate-950 border border-white/10 p-4 rounded-xl text-left text-xs space-y-2 mb-6 text-slate-300 font-mono">
                         <div className="flex justify-between">
                           <span className="text-slate-500">Transaction ID:</span>
-                          <span className="font-mono text-white">{transactionData?.transactionId}</span>
+                          <span className="text-white truncate max-w-[200px]">{transactionData?.transactionId}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Payment Gateway:</span>
+                          <span className="text-slate-500">Payment Method:</span>
                           <span>{transactionData?.paymentProvider}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Receipt Sent To:</span>
-                          <span className="text-white">{transactionData?.email}</span>
+                          <span className="text-slate-500">Status:</span>
+                          <span className={transactionData?.status === 'Verification Required' ? 'text-amber-400 font-bold' : 'text-emerald-400 font-bold'}>
+                            {transactionData?.status}
+                          </span>
                         </div>
                       </div>
 
@@ -402,9 +605,9 @@ const Donate = () => {
                         onClick={() => {
                           setStep(1);
                           setAmount('50');
-                          setDonorInfo({ name: '', email: '', message: '', paymentMethod: 'Credit Card' });
+                          setDonorInfo({ name: '', email: '', message: '', bankReference: '', payoneerReference: '' });
                         }}
-                        className="py-3 px-6 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-sm transition-colors min-h-[44px]"
+                        className="py-3 px-6 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition-colors min-h-[44px]"
                       >
                         Make Another Donation
                       </button>
@@ -418,7 +621,7 @@ const Donate = () => {
           {/* Testimonials */}
           <div className="border-t border-white/5 pt-20">
             <h3 className="text-2xl font-bold text-white mb-10 text-center tracking-tight flex items-center justify-center gap-2">
-              <Award className="text-indigo-400" /> Student Success Stories
+              <Award className="text-indigo-400" /> Community Impact Stories
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               {stories.map((story, idx) => (

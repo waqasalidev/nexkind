@@ -170,18 +170,19 @@ const Scholarships = () => {
                   </div>
                   <div className="mt-auto flex items-center justify-between pt-4 border-t border-slate-50">
                     <div>
-                      <p className="text-xs text-slate-400">Award</p>
-                      <p className="text-lg font-bold text-secondary">{item.amount}</p>
+                      <p className="text-xs text-slate-400 font-semibold">Award Coverage</p>
+                      <p className="text-base font-extrabold text-emerald-600">{item.amount}</p>
                     </div>
                     <div className="flex gap-2">
-                      {item.applyLink ? (
-                        <a href={item.applyLink} target="_blank" rel="noreferrer" className="btn btn-primary text-sm py-2">Apply</a>
-                      ) : (
-                        <Link to={`/scholarships/${item._id}/apply`} className="btn btn-primary text-sm py-2">Apply</Link>
-                      )}
-                      <Link to={`/scholarships/${item._id}`} className="btn btn-secondary text-sm py-2">Details</Link>
+                      <Link to={`/scholarships/${item._id}`} className="btn btn-primary text-sm py-2 px-4">View Opportunity</Link>
                     </div>
                   </div>
+                  {item.sourceReference && (
+                    <div className="mt-3 text-[11px] text-slate-400 bg-slate-50 p-2 rounded-lg flex items-center justify-between border border-slate-100">
+                      <span>Source: <strong className="text-slate-600">{item.sourceReference}</strong></span>
+                      <span className="text-emerald-600 font-bold">Verified</span>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))}

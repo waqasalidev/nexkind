@@ -50,6 +50,10 @@ export const getDonations = (params) => api.get('/donations', { params });
 export const getDonationStats = () => api.get('/donations/stats');
 export const createDonation = (donationData) => api.post('/donations', donationData);
 export const createPaymentIntent = (donationData) => api.post('/donations/create-payment-intent', donationData);
+export const createPayPalDonation = (donationData) => api.post('/donations/paypal', donationData);
+export const createBankTransferDonation = (donationData) => api.post('/donations/bank-transfer', donationData);
+export const createPayoneerDonation = (donationData) => api.post('/donations/payoneer', donationData);
+export const verifyDonation = (id, data) => api.put(`/donations/${id}/verify`, data);
 export const deleteDonation = (id) => api.delete(`/donations/${id}`);
 
 // Student API

@@ -45,10 +45,15 @@ const buildJobQuery = (query) => {
     'company',
     'description',
     'location',
+    'country',
+    'city',
     'category',
   ]);
   if (searchFilter) Object.assign(filter, searchFilter);
   if (query.type) filter.type = query.type;
+  if (query.country) filter.country = { $regex: query.country, $options: 'i' };
+  if (query.city) filter.city = { $regex: query.city, $options: 'i' };
+  if (query.experienceLevel) filter.experienceLevel = query.experienceLevel;
   if (query.category) filter.category = { $regex: query.category, $options: 'i' };
   if (query.workMode) filter.workMode = query.workMode;
   if (query.remote === 'true') filter.workMode = 'Remote';
