@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Clock, Users, Star, BookOpen, CheckCircle, ArrowLeft, PlayCircle, ChevronDown, ChevronUp, Award, Layers, HelpCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';

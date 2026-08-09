@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle, PlayCircle, BookOpen, Download, HelpCircle, Menu, X, Award, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { getStudentCourse, updateCourseProgress } from '../../api';

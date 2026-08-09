@@ -4,6 +4,22 @@ import { Menu, X, User, LogOut, LayoutDashboard, ChevronDown } from 'lucide-reac
 import toast from 'react-hot-toast';
 import Logo from './common/Logo';
 
+const navLinks = [
+  { name: 'Home', path: '/' },
+  { name: 'Courses', path: '/courses' },
+  { name: 'Scholarships', path: '/scholarships' },
+  { name: 'Jobs', path: '/jobs' },
+  { name: 'Events', path: '/events' },
+  { name: 'AI Counselor', path: '/ai-assistant' },
+  { name: 'Contact', path: '/contact' },
+];
+
+const getDashboardUrl = (role) => {
+  if (role === 'admin') return '/admin/dashboard';
+  if (role === 'teacher') return '/teacher/dashboard';
+  return '/student/dashboard';
+};
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -12,6 +28,28 @@ const Navbar = () => {
   const location = useLocation();
 
   const toggleMenu = () => setIsOpen(!isOpen);
+
+  useEffect(() => {
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+      try {
+        setUser(JSON.parse(userInfo));
+      } catch (err) {
+        console.error('Failed to parse user info', err);
+      }
+    } else {
+      setUser(null);
+    }
+  }, [location]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('userInfo');
+    setUser(null);
+    setIsOpen(false);
+    setDropdownOpen(false);
+    toast.success('Logged out successfully');
+    navigate('/');
+  };
 
   useEffect(() => {
     if (isOpen) {
