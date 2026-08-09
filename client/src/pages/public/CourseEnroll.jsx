@@ -124,14 +124,20 @@ const CourseEnroll = () => {
               </form>
             ) : (
               <div className="text-center py-8 animate-in fade-in zoom-in">
-                <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
                   <CheckCircle size={40} />
                 </div>
-                <h2 className="text-2xl font-bold text-slate-800 mb-2">Enrollment Successful!</h2>
-                <p className="text-slate-600 mb-8">You have successfully enrolled in the course. A confirmation email has been sent to you.</p>
-                <button onClick={() => navigate('/student/dashboard')} className="btn btn-primary w-full justify-center">
-                  Go to Dashboard
-                </button>
+                <h2 className="text-2xl font-extrabold text-slate-900 mb-2">Enrollment Successful!</h2>
+                <p className="text-slate-600 mb-8 text-sm">Your enrollment is active and saved to your account. You can access all modules, lessons, and quizzes immediately.</p>
+                
+                <div className="space-y-3">
+                  <button onClick={() => navigate(`/student/courses/${id}/learn`)} className="btn btn-primary w-full justify-center py-3 text-base font-bold shadow-lg shadow-blue-500/20">
+                    Start Learning Now
+                  </button>
+                  <button onClick={() => navigate('/student/dashboard')} className="btn btn-secondary w-full justify-center py-3 text-base">
+                    Go to Student Dashboard
+                  </button>
+                </div>
               </div>
             )}
           </div>

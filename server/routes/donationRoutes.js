@@ -1,12 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const {
+  createPaymentIntent,
   createDonation,
   getDonations,
   getDonationStats,
   deleteDonation
 } = require('../controllers/donationController');
 const { protect, admin } = require('../middleware/authMiddleware');
+
+router.post('/create-payment-intent', createPaymentIntent);
 
 router.route('/')
   .post(createDonation)

@@ -52,7 +52,33 @@ const buildJobQuery = (query) => {
   if (query.category) filter.category = { $regex: query.category, $options: 'i' };
   if (query.workMode) filter.workMode = query.workMode;
   if (query.remote === 'true') filter.workMode = 'Remote';
+
+  if (query.includeExpired !== 'true') {
+    filter.status = { $ne: 'archived' };
+    filter.$or = [
+      { deadline: { $exists: false } },
+      { deadline: null },
+      { deadline: { $gte: new Date() } }
+    ];
+  }
+
   return filter;
 };
 
-module.exports = { buildScholarshipQuery, buildCourseQuery, buildJobQuery };
+const buildEventQuery = (query) => {
+  const filter = {};
+  const searchFilter = buildSearchFilter(query.search, [
+    'title',
+    'description',
+    'location',
+    'organizer',
+    'category',
+  ]);
+  if (searchFilter) Object.assign(filter, searchFilter);
+  if (query.category) filter.category = { $regex: query.category, $options: 'i' };
+  if (query.status) filter.status = query.status;
+
+  return filter;
+};
+
+module.exports = { buildScholarshipQuery, buildCourseQuery, buildJobQuery, buildEventQuery };

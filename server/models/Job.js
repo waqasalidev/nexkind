@@ -16,14 +16,22 @@ const jobSchema = mongoose.Schema({
     enum: ['Remote', 'On-site', 'Hybrid'],
     default: 'On-site',
   },
+  companyLogo: { type: String },
   salary: { type: String },
   experience: { type: String },
   responsibilities: [{ type: String }],
   requirements: [{ type: String }],
+  skills: [{ type: String }],
   benefits: [{ type: String }],
   companyLink: { type: String },
   applyLink: { type: String },
   image: { type: String },
+  deadline: { type: Date },
+  status: {
+    type: String,
+    enum: ['active', 'archived', 'unpublished'],
+    default: 'active',
+  },
   applicantsCount: { type: Number, default: 0 },
 }, { timestamps: true });
 

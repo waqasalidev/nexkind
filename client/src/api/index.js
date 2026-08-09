@@ -49,6 +49,7 @@ export const deleteMessage = (id) => api.delete(`/messages/${id}`);
 export const getDonations = (params) => api.get('/donations', { params });
 export const getDonationStats = () => api.get('/donations/stats');
 export const createDonation = (donationData) => api.post('/donations', donationData);
+export const createPaymentIntent = (donationData) => api.post('/donations/create-payment-intent', donationData);
 export const deleteDonation = (id) => api.delete(`/donations/${id}`);
 
 // Student API
@@ -58,7 +59,7 @@ export const applyJob = (id) => api.post(`/student/jobs/apply/${id}`);
 export const registerEvent = (id) => api.post(`/student/events/register/${id}`);
 export const enrollCourse = (id) => api.post(`/student/courses/enroll/${id}`);
 export const getStudentCourse = (id) => api.get(`/student/courses/${id}`);
-export const updateCourseProgress = (id, progress) => api.post(`/student/courses/${id}/progress`, { progress });
+export const updateCourseProgress = (id, payload) => api.post(`/student/courses/${id}/progress`, typeof payload === 'object' ? payload : { progress: payload });
 export const applyScholarship = (id) => api.post(`/student/scholarships/apply/${id}`);
 
 // Chat API

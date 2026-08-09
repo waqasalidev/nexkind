@@ -14,44 +14,18 @@ const Navbar = () => {
   const toggleMenu = () => setIsOpen(!isOpen);
 
   useEffect(() => {
-    const userInfo = localStorage.getItem('userInfo');
-    if (userInfo) {
-      setUser(JSON.parse(userInfo));
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
     } else {
-      setUser(null);
+      document.body.style.overflow = 'unset';
     }
-  }, [location]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('userInfo');
-    setUser(null);
-    setDropdownOpen(false);
-    setIsOpen(false);
-    toast.success('Logged out successfully');
-    navigate('/');
-  };
-
-  const getDashboardUrl = (role) => {
-    switch (role) {
-      case 'admin': return '/admin/dashboard';
-      case 'teacher': return '/teacher/dashboard';
-      default: return '/student/dashboard';
-    }
-  };
-
-  const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'About', path: '/about' },
-    { name: 'Courses', path: '/courses' },
-    { name: 'Events', path: '/events' },
-    { name: 'Scholarships', path: '/scholarships' },
-    { name: 'Jobs', path: '/jobs' },
-    { name: 'AI Assistant', path: '/ai-assistant' },
-    { name: 'Contact', path: '/contact' },
-  ];
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   return (
-    <nav className="sticky top-0 z-50 h-20 w-full glass">
+    <nav className="sticky top-0 z-50 h-20 w-full glass shadow-sm">
       <div className="container-custom h-full flex justify-between items-center">
         <Logo size="md" variant="light" />
 
@@ -62,7 +36,7 @@ const Navbar = () => {
               <NavLink
                 key={link.name}
                 to={link.path}
-                className={({ isActive }) => `font-medium transition-colors ${isActive ? 'text-primary border-b-2 border-secondary' : 'text-slate-500 hover:text-primary'}`}
+                className={({ isActive }) => `font-medium py-2 px-1 transition-colors ${isActive ? 'text-primary border-b-2 border-secondary' : 'text-slate-600 hover:text-primary'}`}
               >
                 {link.name}
               </NavLink>
@@ -73,7 +47,7 @@ const Navbar = () => {
               <div className="relative">
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-2 hover:bg-slate-100 py-1 px-2 rounded-lg transition-colors"
+                  className="flex items-center gap-2 hover:bg-slate-100 py-2 px-3 rounded-xl transition-colors min-h-[44px]"
                 >
                   <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold overflow-hidden border border-primary/20">
                     {user.avatar ? (
@@ -90,7 +64,7 @@ const Navbar = () => {
 
                 {/* Dropdown */}
                 {dropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 animate-fade-in">
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 animate-fade-in z-50">
                     <div className="px-4 py-3 border-b border-slate-100 mb-2">
                       <p className="font-bold text-slate-800 truncate">{user.firstName} {user.lastName}</p>
                       <p className="text-xs text-slate-500 truncate">{user.email}</p>
@@ -98,7 +72,7 @@ const Navbar = () => {
 
                     <Link
                       to={getDashboardUrl(user.role)}
-                      className="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors"
+                      className="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors min-h-[44px]"
                       onClick={() => setDropdownOpen(false)}
                     >
                       <LayoutDashboard size={18} /> Dashboard
@@ -106,7 +80,7 @@ const Navbar = () => {
                     <Link
                       to={getDashboardUrl(user.role)}
                       state={{ activeTab: 'settings' }}
-                      className="flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors"
+                      className="flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors min-h-[44px]"
                       onClick={() => setDropdownOpen(false)}
                     >
                       <User size={18} /> Profile
@@ -114,7 +88,7 @@ const Navbar = () => {
                     <div className="border-t border-slate-100 my-1"></div>
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-2 text-red-500 hover:bg-red-50 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-red-500 hover:bg-red-50 transition-colors text-left min-h-[44px]"
                     >
                       <LogOut size={18} /> Logout
                     </button>
@@ -122,60 +96,70 @@ const Navbar = () => {
                 )}
               </div>
             ) : (
-              <Link to="/student/login" className="btn btn-secondary">Login</Link>
+              <Link to="/student/login" className="btn btn-secondary min-h-[44px] flex items-center justify-center">Login</Link>
             )}
-            <Link to="/donate" className="btn btn-primary">Donate</Link>
+            <Link to="/donate" className="btn btn-primary min-h-[44px] flex items-center justify-center">Donate</Link>
           </div>
         </div>
 
         {/* Mobile Toggle */}
-        <button className="lg:hidden text-primary" onClick={toggleMenu}>
+        <button 
+          className="lg:hidden text-primary p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors" 
+          onClick={toggleMenu}
+          aria-label="Toggle navigation menu"
+        >
           {isOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Backdrop & Drawer */}
       {isOpen && (
-        <div className="absolute top-20 left-0 w-full bg-white border-t border-slate-100 shadow-lg p-6 flex flex-col gap-4 lg:hidden animate-fade-in">
-          {user && (
-            <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold overflow-hidden">
-                {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" /> : user.firstName?.charAt(0) || 'U'}
+        <>
+          <div 
+            className="fixed inset-0 top-20 bg-slate-900/40 backdrop-blur-xs z-40 lg:hidden"
+            onClick={() => setIsOpen(false)}
+          />
+          <div className="fixed top-20 left-0 right-0 max-h-[calc(100vh-5rem)] overflow-y-auto bg-white border-t border-slate-100 shadow-2xl p-6 flex flex-col gap-4 lg:hidden animate-fade-in z-50">
+            {user && (
+              <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold overflow-hidden">
+                  {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="User avatar" /> : user.firstName?.charAt(0) || 'U'}
+                </div>
+                <div>
+                  <p className="font-bold text-slate-900">{user.firstName} {user.lastName}</p>
+                  <p className="text-xs text-slate-500 capitalize">{user.role || 'Student'}</p>
+                </div>
               </div>
-              <div>
-                <p className="font-bold text-slate-900">{user.firstName} {user.lastName}</p>
-                <p className="text-xs text-slate-500 capitalize">{user.role || 'Student'}</p>
-              </div>
-            </div>
-          )}
-
-          {navLinks.map((link) => (
-            <NavLink
-              key={link.name}
-              to={link.path}
-              className={({ isActive }) => `text-lg font-medium py-2 ${isActive ? 'text-primary' : 'text-slate-600'}`}
-              onClick={() => setIsOpen(false)}
-            >
-              {link.name}
-            </NavLink>
-          ))}
-
-          <div className="flex flex-col gap-3 mt-4">
-            {user ? (
-              <>
-                <Link to={getDashboardUrl(user.role)} className="btn bg-slate-100 text-slate-700 justify-center" onClick={() => setIsOpen(false)}>
-                  <LayoutDashboard size={18} className="mr-2" /> Dashboard
-                </Link>
-                <button onClick={handleLogout} className="btn bg-red-50 text-red-600 justify-center border border-red-100">
-                  <LogOut size={18} className="mr-2" /> Logout
-                </button>
-              </>
-            ) : (
-              <Link to="/student/login" className="btn btn-secondary justify-center" onClick={() => setIsOpen(false)}>Login</Link>
             )}
-            <Link to="/donate" className="btn btn-primary justify-center" onClick={() => setIsOpen(false)}>Donate</Link>
+
+            {navLinks.map((link) => (
+              <NavLink
+                key={link.name}
+                to={link.path}
+                className={({ isActive }) => `text-base font-semibold py-3 px-3 rounded-lg flex items-center min-h-[44px] transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-slate-700 hover:bg-slate-50'}`}
+                onClick={() => setIsOpen(false)}
+              >
+                {link.name}
+              </NavLink>
+            ))}
+
+            <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-slate-100">
+              {user ? (
+                <>
+                  <Link to={getDashboardUrl(user.role)} className="btn bg-slate-100 text-slate-700 justify-center min-h-[44px]" onClick={() => setIsOpen(false)}>
+                    <LayoutDashboard size={18} className="mr-2" /> Dashboard
+                  </Link>
+                  <button onClick={handleLogout} className="btn bg-red-50 text-red-600 justify-center border border-red-100 min-h-[44px]">
+                    <LogOut size={18} className="mr-2" /> Logout
+                  </button>
+                </>
+              ) : (
+                <Link to="/student/login" className="btn btn-secondary justify-center min-h-[44px]" onClick={() => setIsOpen(false)}>Login</Link>
+              )}
+              <Link to="/donate" className="btn btn-primary justify-center min-h-[44px]" onClick={() => setIsOpen(false)}>Donate</Link>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </nav>
   );

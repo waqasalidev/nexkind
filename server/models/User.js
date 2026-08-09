@@ -29,7 +29,12 @@ const userSchema = mongoose.Schema(
     enrolledCourses: [{ 
       course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }, 
       progress: { type: Number, default: 0 }, 
-      enrolledAt: { type: Date, default: Date.now } 
+      enrolledAt: { type: Date, default: Date.now },
+      currentLessonId: { type: String, default: '' },
+      lastAccessedAt: { type: Date, default: Date.now },
+      completedLessons: [{ type: String }],
+      completedAt: { type: Date },
+      certificateIssued: { type: Boolean, default: false }
     }],
   },
   { timestamps: true }

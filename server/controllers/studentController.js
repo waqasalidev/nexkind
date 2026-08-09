@@ -121,6 +121,11 @@ const enrollCourse = async (req, res) => {
     const user = await User.findById(req.user._id);
     const courseId = req.params.id;
 
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
     const alreadyEnrolled = user.enrolledCourses.find(
       (enroll) => enroll.course.toString() === courseId
     );
@@ -129,7 +134,22 @@ const enrollCourse = async (req, res) => {
       return res.status(400).json({ message: 'You are already enrolled in this course' });
     }
 
-    user.enrolledCourses.push({ course: courseId });
+    // Default current lesson ID to first lesson if available
+    let initialLessonId = '';
+    if (course.modules && course.modules.length > 0 && course.modules[0].lessons && course.modules[0].lessons.length > 0) {
+      initialLessonId = course.modules[0].lessons[0]._id ? course.modules[0].lessons[0]._id.toString() : 'mod-0-les-0';
+    }
+
+    user.enrolledCourses.push({
+      course: courseId,
+      progress: 0,
+      enrolledAt: Date.now(),
+      currentLessonId: initialLessonId,
+      lastAccessedAt: Date.now(),
+      completedLessons: [],
+      certificateIssued: false
+    });
+
     await user.save();
 
     // Increment course students enrolled count
@@ -178,7 +198,7 @@ const getStudentCourse = async (req, res) => {
     const courseId = req.params.id;
 
     const enrolledCourse = user.enrolledCourses.find(
-      (enroll) => enroll.course._id.toString() === courseId
+      (enroll) => enroll.course && enroll.course._id.toString() === courseId
     );
 
     if (!enrolledCourse) {
@@ -198,7 +218,7 @@ const updateCourseProgress = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     const courseId = req.params.id;
-    const { progress } = req.body;
+    const { lessonId, completed, currentLessonId } = req.body;
 
     const enrolledCourseIndex = user.enrolledCourses.findIndex(
       (enroll) => enroll.course.toString() === courseId
@@ -208,10 +228,72 @@ const updateCourseProgress = async (req, res) => {
       return res.status(404).json({ message: 'Course not found in your enrollment' });
     }
 
-    user.enrolledCourses[enrolledCourseIndex].progress = progress;
+    const enrollment = user.enrolledCourses[enrolledCourseIndex];
+    const course = await Course.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Update active current lesson
+    if (currentLessonId) {
+      enrollment.currentLessonId = currentLessonId;
+    } else if (lessonId) {
+      enrollment.currentLessonId = lessonId;
+    }
+    enrollment.lastAccessedAt = Date.now();
+
+    // Toggle or set lesson completion state if lessonId provided
+    if (lessonId) {
+      const lessonStr = lessonId.toString();
+      const existingIdx = enrollment.completedLessons.findIndex(id => id.toString() === lessonStr);
+
+      if (completed === true && existingIdx === -1) {
+        enrollment.completedLessons.push(lessonStr);
+      } else if (completed === false && existingIdx !== -1) {
+        enrollment.completedLessons.splice(existingIdx, 1);
+      } else if (completed === undefined) {
+        // Toggle if not explicitly specified
+        if (existingIdx !== -1) {
+          enrollment.completedLessons.splice(existingIdx, 1);
+        } else {
+          enrollment.completedLessons.push(lessonStr);
+        }
+      }
+    }
+
+    // Calculate total lessons in course
+    let totalLessonsCount = 0;
+    if (course.modules && Array.isArray(course.modules)) {
+      course.modules.forEach(mod => {
+        if (mod.lessons && Array.isArray(mod.lessons)) {
+          totalLessonsCount += mod.lessons.length;
+        }
+      });
+    }
+
+    if (totalLessonsCount > 0) {
+      const percentage = Math.round((enrollment.completedLessons.length / totalLessonsCount) * 100);
+      enrollment.progress = Math.min(100, Math.max(0, percentage));
+    } else if (req.body.progress !== undefined) {
+      enrollment.progress = req.body.progress;
+    }
+
+    if (enrollment.progress === 100) {
+      if (!enrollment.completedAt) enrollment.completedAt = Date.now();
+      enrollment.certificateIssued = true;
+    }
+
     await user.save();
 
-    res.json({ message: 'Progress updated', progress: user.enrolledCourses[enrolledCourseIndex].progress });
+    res.json({
+      message: 'Progress updated successfully',
+      progress: enrollment.progress,
+      currentLessonId: enrollment.currentLessonId,
+      completedLessons: enrollment.completedLessons,
+      certificateIssued: enrollment.certificateIssued,
+      completedAt: enrollment.completedAt
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

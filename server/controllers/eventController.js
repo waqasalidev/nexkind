@@ -1,4 +1,5 @@
 const Event = require('../models/Event');
+const { buildEventQuery } = require('../utils/buildQuery');
 
 // @desc    Create a new event
 // @route   POST /api/events
@@ -10,12 +11,18 @@ const createEvent = async (req, res) => {
       description,
       date,
       time,
+      startTime,
+      endTime,
       location,
+      eventMode,
+      meetingUrl,
       organizer,
       category,
       image,
+      capacity,
       agenda,
-      speakers
+      speakers,
+      status
     } = req.body;
 
     const event = new Event({
@@ -23,12 +30,18 @@ const createEvent = async (req, res) => {
       description,
       date,
       time,
+      startTime,
+      endTime,
       location,
+      eventMode: eventMode || 'offline',
+      meetingUrl,
       organizer,
       category,
       image,
+      capacity: capacity || 100,
       agenda,
-      speakers
+      speakers,
+      status: status || 'published'
     });
 
     const createdEvent = await event.save();
@@ -38,55 +51,46 @@ const createEvent = async (req, res) => {
   }
 };
 
-// @desc    Get all events with pagination
+// @desc    Get all events with pagination & filtering
 // @route   GET /api/events
 // @access  Public
 const getEvents = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const count = await Event.countDocuments();
-    
-    // If limit is 0, return all events (useful for frontend cards if needed, though pagination preferred)
-    // But for admin table consistency, let's keep standard pagination logic.
-    // If not paging, frontend might not send page/limit, defaulting to 1/10.
-    // Wait, public pages might use this too without pagination. 
-    // Let's support "no params = all" OR "defaults".
-    // Actually, usually it's better to default to pagination.
-    // Let's check how frontend uses it currently. It just calls getEvents().
-    // If I default to 10, existing frontend pages might break if they expect all.
-    // Let's see... usually admin tables need pagination, public lists might need it too or "Load More".
-    // Safest approach: if page/limit NOT provided, return all?
-    // Or just default to a large limit?
-    // The prompt asked for "server side pagination on all admin pages".
-    // I'll implement proper pagination. If public pages break, I'll fix them to either request all or handle pages.
-    // But to be safe for public pages that might expect an array:
-    // I should check if pagination params are present.
-    // Implementation:
-    
-    if (req.query.page && req.query.limit) {
-       const skip = (page - 1) * limit;
-       const events = await Event.find({})
-         .limit(limit)
-         .skip(skip)
-         .sort({ createdAt: -1 });
+    const filter = buildEventQuery(req.query);
+    const count = await Event.countDocuments(filter);
 
-       return res.json({
-         events,
-         page,
-         pages: Math.ceil(count / limit),
-         total: count
-       });
+    let events = await Event.find(filter).sort({ createdAt: -1 });
+
+    // Client-side / filter parameter for upcoming vs past if requested
+    const now = new Date();
+    if (req.query.timeframe === 'upcoming') {
+      events = events.filter(e => {
+        const eventDate = new Date(e.date);
+        return isNaN(eventDate.getTime()) || eventDate >= new Date(now.setHours(0,0,0,0));
+      });
+    } else if (req.query.timeframe === 'past') {
+      events = events.filter(e => {
+        const eventDate = new Date(e.date);
+        return !isNaN(eventDate.getTime()) && eventDate < new Date(now.setHours(0,0,0,0));
+      });
+    }
+
+    if (req.query.page && req.query.limit) {
+      const skip = (page - 1) * limit;
+      const paginatedEvents = events.slice(skip, skip + limit);
+      return res.json({
+        events: paginatedEvents,
+        page,
+        pages: Math.ceil(events.length / limit),
+        total: events.length
+      });
     } else {
-       // Return all if no pagination params (backward compatibility for public pages?)
-       // User asked specifically to "implement server side pagination on all admin pages".
-       // Admin pages WILL send params. Public pages WON'T (yet).
-       // So this conditional return prevents breaking public pages which expect an array `[]` vs `{ events: [] }`.
-       const events = await Event.find({}).sort({ createdAt: -1 });
-       return res.json(events); 
+      return res.json(events);
     }
   } catch (error) {
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: 'Server Error', error: error.message });
   }
 };
 
