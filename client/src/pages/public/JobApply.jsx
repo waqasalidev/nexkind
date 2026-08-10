@@ -3,7 +3,7 @@ import { ArrowLeft, CheckCircle, UploadCloud } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
-import { applyJob } from '../../api';
+import { applyToJob } from '../../api';
 
 const JobApply = () => {
   const { id } = useParams();
@@ -41,7 +41,7 @@ const JobApply = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await applyJob(id);
+      await applyToJob(id);
       setStatus('success');
       toast.success('Application submitted successfully!');
     } catch (error) {

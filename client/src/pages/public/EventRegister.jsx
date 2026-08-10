@@ -2,7 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, Ticket } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { registerEvent } from '../../api';
+import { registerForEvent } from '../../api';
 
 const EventRegister = () => {
   const { id } = useParams();
@@ -38,7 +38,7 @@ const EventRegister = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await registerEvent(id);
+      await registerForEvent(id);
       setStatus('success');
       toast.success('Successfully registered for event!');
     } catch (error) {

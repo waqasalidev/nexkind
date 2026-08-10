@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { BookOpen, Briefcase, User, Bell, Calendar, Search, Sparkles, GraduationCap, Menu } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { BookOpen, Briefcase, User, Bell, Calendar, Search, Sparkles, GraduationCap, Menu, RefreshCw, AlertCircle } from 'lucide-react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { getStudentDashboard, getStudentMentoring, getChatConversations } from '../../api';
+import { getDashboardSummary, getStudentMentoring, getChatConversations } from '../../api';
 import StudentCourses from '../../components/student/StudentCourses';
 import StudentEvents from '../../components/student/StudentEvents';
 import StudentScholarships from '../../components/student/StudentScholarships';
@@ -11,6 +11,27 @@ import StudentSidebar from '../../components/student/StudentSidebar';
 import StudentProfile from '../../components/student/StudentProfile';
 import Logo from '../../components/common/Logo';
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Relative time helper
+// ──────────────────────────────────────────────────────────────────────────────
+const timeAgo = (dateStr) => {
+  if (!dateStr) return 'Recently';
+  const now = Date.now();
+  const diff = now - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins} minute${mins === 1 ? '' : 's'} ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hour${hrs === 1 ? '' : 's'} ago`;
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return `${days} days ago`;
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Mentorship Tab (unchanged)
+// ──────────────────────────────────────────────────────────────────────────────
 const StudentMentorshipTab = () => {
   const [loading, setLoading] = useState(true);
   const [mentorData, setMentorData] = useState({ mentor: null, mentorNotes: [], announcements: [] });
@@ -54,9 +75,7 @@ const StudentMentorshipTab = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left column: Mentor & AI Assistant Session History */}
         <div className="space-y-6">
-          {/* Mentor Profile info */}
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Assigned Mentor</h3>
             {mentor ? (
@@ -82,7 +101,6 @@ const StudentMentorshipTab = () => {
             )}
           </div>
 
-          {/* AI Advisor Chat Logs */}
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">AI Assistant Conversations</h3>
@@ -107,9 +125,7 @@ const StudentMentorshipTab = () => {
           </div>
         </div>
 
-        {/* Right column: Goals and Bulletins */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Goals Tracker */}
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
             <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
               <GraduationCap className="text-primary" size={20} /> Assigned Mentoring Goals
@@ -142,7 +158,6 @@ const StudentMentorshipTab = () => {
             </div>
           </div>
 
-          {/* Announcements Bulletins */}
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
             <h3 className="text-lg font-bold text-slate-800 mb-4">Class Announcements</h3>
             <div className="space-y-4 max-h-[350px] overflow-y-auto pr-1">
@@ -167,33 +182,32 @@ const StudentMentorshipTab = () => {
   );
 };
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Main Dashboard
+// ──────────────────────────────────────────────────────────────────────────────
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [user, setUser] = useState(null);
+
+  // ── Summary state (real per-user counts) ──
+  const [summary, setSummary] = useState({
+    coursesEnrolled: 0,
+    jobsApplied: 0,
+    eventsRegistered: 0,
+    scholarshipsApplied: 0,
+    recentActivity: []
+  });
+  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [summaryError, setSummaryError] = useState(null);
 
   useEffect(() => {
     if (location.state?.activeTab) {
       setActiveTab(location.state.activeTab);
     }
   }, [location]);
-
-  const [stats, setStats] = useState({
-    enrolledCourses: 0,
-    upcomingEvents: 0,
-    jobApplications: 0
-  });
-
-  const [studentData, setStudentData] = useState({
-    enrolledCourses: [],
-    registeredEvents: [],
-    appliedJobs: [],
-    scholarshipApplications: [],
-    savedJobs: []
-  });
-
-  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const userInfo = localStorage.getItem('userInfo');
@@ -209,27 +223,44 @@ const StudentDashboard = () => {
     }
   }, [navigate]);
 
+  // ── Fetch real per-user summary stats ──
+  const fetchSummary = useCallback(async () => {
+    try {
+      setSummaryLoading(true);
+      setSummaryError(null);
+      const { data } = await getDashboardSummary();
+      setSummary({
+        coursesEnrolled: data.coursesEnrolled ?? 0,
+        jobsApplied: data.jobsApplied ?? 0,
+        eventsRegistered: data.eventsRegistered ?? 0,
+        scholarshipsApplied: data.scholarshipsApplied ?? 0,
+        recentActivity: data.recentActivity || []
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard summary:', error);
+      setSummaryError('Unable to load your activity. Please try again.');
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchSummary();
+    }
+  }, [user, fetchSummary]);
+
   const handleLogout = () => {
     localStorage.removeItem('userInfo');
     navigate('/student/login');
   };
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const { data } = await getStudentDashboard();
-        setStudentData(data);
-        setStats({
-          enrolledCourses: data.enrolledCourses.length,
-          upcomingEvents: data.registeredEvents.length,
-          jobApplications: data.appliedJobs.length
-        });
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      }
-    };
-    fetchStats();
-  }, []);
+  const statCards = [
+    { label: 'Courses Enrolled', value: summary.coursesEnrolled, icon: BookOpen, color: 'from-blue-500 to-cyan-400', tab: 'courses', emptyLabel: 'Explore Courses', emptyHref: '/courses' },
+    { label: 'Jobs Applied', value: summary.jobsApplied, icon: Briefcase, color: 'from-orange-400 to-red-400', tab: 'jobs', emptyLabel: 'Explore Jobs', emptyHref: '/jobs' },
+    { label: 'Events Registered', value: summary.eventsRegistered, icon: Calendar, color: 'from-purple-500 to-pink-500', tab: 'events', emptyLabel: 'Explore Events', emptyHref: '/events' },
+    { label: 'Scholarships Applied', value: summary.scholarshipsApplied, icon: GraduationCap, color: 'from-emerald-500 to-teal-400', tab: 'scholarships', emptyLabel: 'Explore Scholarships', emptyHref: '/scholarships' }
+  ];
 
   const renderContent = () => {
     switch (activeTab) {
@@ -246,81 +277,124 @@ const StudentDashboard = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { label: 'Enrolled Courses', value: stats.enrolledCourses, icon: BookOpen, color: 'from-blue-500 to-cyan-400' },
-                { label: 'Registered Events', value: stats.upcomingEvents, icon: Calendar, color: 'from-purple-500 to-pink-500' },
-                { label: 'Job Applications', value: stats.jobApplications, icon: Briefcase, color: 'from-orange-400 to-red-400' }
-              ].map((stat, i) => (
-                <div key={i} className="group relative bg-white overflow-hidden p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            {/* ── Summary Error Banner ── */}
+            {summaryError && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center justify-between">
+                <div className="flex items-center gap-2 text-red-600 text-sm font-medium">
+                  <AlertCircle size={16} />
+                  {summaryError}
+                </div>
+                <button
+                  onClick={fetchSummary}
+                  className="flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-800 hover:underline"
+                >
+                  <RefreshCw size={12} /> Retry
+                </button>
+              </div>
+            )}
+
+            {/* ── Stats Cards ── */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {statCards.map((stat, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveTab(stat.tab)}
+                  className="group relative bg-white overflow-hidden p-5 rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-left w-full"
+                >
                   <div className={`absolute top-0 right-0 p-3 opacity-10 rounded-bl-3xl bg-gradient-to-br ${stat.color}`}>
-                    <stat.icon size={60} />
+                    <stat.icon size={50} />
                   </div>
                   <div className="relative z-10">
-                    <h3 className="text-4xl font-bold text-slate-800 mb-1 group-hover:bg-gradient-to-r group-hover:from-slate-800 group-hover:to-slate-600 group-hover:bg-clip-text group-hover:text-transparent transition-all">{stat.value}</h3>
-                    <p className="text-slate-500 font-medium flex items-center gap-2">
-                      <stat.icon size={16} /> {stat.label}
+                    {summaryLoading ? (
+                      <div className="h-9 w-12 bg-slate-200 rounded animate-pulse mb-1" />
+                    ) : (
+                      <h3 className="text-4xl font-bold text-slate-800 mb-1">{stat.value}</h3>
+                    )}
+                    <p className="text-slate-500 font-medium text-sm flex items-center gap-1.5">
+                      <stat.icon size={14} /> {stat.label}
                     </p>
                   </div>
-                </div>
+                  {!summaryLoading && stat.value === 0 && (
+                    <p className="text-[10px] text-slate-400 mt-1 relative z-10">Tap to {stat.emptyLabel}</p>
+                  )}
+                </button>
               ))}
             </div>
 
+            {/* ── Main content grid ── */}
             <div className="grid lg:grid-cols-3 gap-8">
+
+              {/* Recent Activity Feed */}
               <div className="lg:col-span-2">
                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                      <Sparkles className="text-yellow-400 fill-yellow-400" size={20} /> Continue Learning
+                      <Sparkles className="text-yellow-400 fill-yellow-400" size={20} /> Recent Activity
                     </h3>
+                    <button
+                      onClick={fetchSummary}
+                      disabled={summaryLoading}
+                      className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-colors"
+                      title="Refresh activity"
+                    >
+                      <RefreshCw size={12} className={summaryLoading ? 'animate-spin' : ''} />
+                      Refresh
+                    </button>
                   </div>
 
-                  {studentData.enrolledCourses.length > 0 ? (
-                    <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 transition-colors group cursor-pointer">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full mb-2 inline-block">
-                            {studentData.enrolledCourses[0].course.category || 'Course'}
-                          </span>
-                          <h4 className="text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
-                            {studentData.enrolledCourses[0].course.title}
-                          </h4>
-                          <p className="text-sm text-slate-500 mt-1">Instructor: {studentData.enrolledCourses[0].course.instructor}</p>
+                  {summaryLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="flex gap-3 animate-pulse">
+                          <div className="w-8 h-8 bg-slate-200 rounded-full shrink-0" />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-3 bg-slate-200 rounded w-3/4" />
+                            <div className="h-2 bg-slate-100 rounded w-1/3" />
+                          </div>
                         </div>
-                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-blue-600 font-bold border border-slate-100">
-                          {studentData.enrolledCourses[0].progress}%
+                      ))}
+                    </div>
+                  ) : summary.recentActivity.length > 0 ? (
+                    <div className="space-y-3">
+                      {summary.recentActivity.map((activity, idx) => (
+                        <div key={idx} className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group">
+                          <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-sm shrink-0 group-hover:bg-blue-50">
+                            {activity.icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-slate-700 truncate">{activity.title}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[10px] text-slate-400">{timeAgo(activity.at)}</span>
+                              {activity.status && (
+                                <span className="text-[10px] bg-blue-50 text-blue-600 font-bold px-1.5 py-0.5 rounded capitalize">{activity.status}</span>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="h-2.5 w-full bg-slate-200 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
-                          style={{ width: `${studentData.enrolledCourses[0].progress}%` }}
-                        ></div>
-                      </div>
-                      <div className="mt-4 flex justify-end">
-                        <button
-                          onClick={() => setActiveTab('courses')}
-                          className="px-5 py-2 bg-white text-slate-700 text-sm font-semibold rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm border border-slate-200 hover:border-transparent"
-                        >
-                          Resume Course
-                        </button>
-                      </div>
+                      ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-slate-500">
-                      <p>You haven't enrolled in any courses yet.</p>
-                      <button onClick={() => navigate('/courses')} className="mt-4 btn btn-primary">Browse Courses</button>
+                    <div className="text-center py-10 text-slate-400">
+                      <Sparkles size={32} className="mx-auto mb-2 opacity-30" />
+                      <p className="text-sm font-semibold">No activity yet</p>
+                      <p className="text-xs mt-1">Enroll in a course, apply for a job, or register for an event to get started.</p>
+                      <div className="flex justify-center gap-2 mt-4 flex-wrap">
+                        <button onClick={() => navigate('/courses')} className="text-xs btn btn-primary py-1.5 px-4">Explore Courses</button>
+                        <button onClick={() => navigate('/jobs')} className="text-xs btn bg-slate-100 text-slate-700 hover:bg-slate-200 py-1.5 px-4">Browse Jobs</button>
+                        <button onClick={() => navigate('/events')} className="text-xs btn bg-slate-100 text-slate-700 hover:bg-slate-200 py-1.5 px-4">Find Events</button>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
 
+              {/* Daily Motivation Card */}
               <div>
                 <div className="bg-gradient-to-br from-indigo-900 to-slate-900 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
                   <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500 opacity-20 rounded-full -ml-10 -mb-10 blur-xl"></div>
 
-                  <h3 className="text-lg font-bold mb-4 relative z-10">Daily Fact</h3>
+                  <h3 className="text-lg font-bold mb-4 relative z-10">Daily Insight</h3>
                   <p className="text-indigo-200 text-sm leading-relaxed relative z-10">
                     "Consistent learning for just 20 minutes a day can effectively build new neural pathways in your brain."
                   </p>
@@ -331,15 +405,37 @@ const StudentDashboard = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* Quick Links */}
+                <div className="mt-6 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                  <h3 className="text-sm font-bold text-slate-700 mb-3">Quick Access</h3>
+                  <div className="space-y-2">
+                    {[
+                      { label: 'Browse Courses', href: '/courses', icon: '📚' },
+                      { label: 'Find Jobs', href: '/jobs', icon: '💼' },
+                      { label: 'Upcoming Events', href: '/events', icon: '📅' },
+                      { label: 'Scholarships', href: '/scholarships', icon: '🎓' }
+                    ].map((link, i) => (
+                      <button
+                        key={i}
+                        onClick={() => navigate(link.href)}
+                        className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 transition-colors text-left group"
+                      >
+                        <span className="text-base">{link.icon}</span>
+                        <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900">{link.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         );
       case 'profile': return <StudentProfile />;
-      case 'courses': return <StudentCourses courses={studentData.enrolledCourses} />;
-      case 'events': return <StudentEvents events={studentData.registeredEvents} />;
-      case 'scholarships': return <StudentScholarships scholarships={studentData.scholarshipApplications} />;
-      case 'jobs': return <StudentJobs jobs={studentData.appliedJobs} savedJobs={studentData.savedJobs} />;
+      case 'courses': return <StudentCourses />;
+      case 'events': return <StudentEvents />;
+      case 'scholarships': return <StudentScholarships scholarships={[]} />;
+      case 'jobs': return <StudentJobs />;
       case 'mentorship': return <StudentMentorshipTab />;
       case 'settings': return <StudentSettings user={user} />;
       default: return null;

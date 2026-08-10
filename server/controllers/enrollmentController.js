@@ -2,8 +2,7 @@ const Enrollment = require('../models/Enrollment');
 const Course = require('../models/Course');
 const User = require('../models/User');
 const mongoose = require('mongoose');
-
-const memoryEnrollments = [];
+const { memoryEnrollments } = require('../utils/memoryStore');
 
 // @desc    Enroll in a course (internal or external)
 // @route   POST /api/enrollments

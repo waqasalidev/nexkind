@@ -6,6 +6,7 @@ export const register = (userData) => api.post('/auth/signup', userData);
 
 // Dashboard API
 export const getDashboardStats = () => api.get('/dashboard/stats');
+export const getDashboardSummary = () => api.get('/dashboard/summary');
 export const syncDatabaseCounts = () => api.post('/dashboard/sync');
 
 // User API
@@ -33,6 +34,10 @@ export const getEvent = (id) => api.get(`/events/${id}`);
 export const createEvent = (eventData) => api.post('/events', eventData);
 export const updateEvent = (id, eventData) => api.put(`/events/${id}`, eventData);
 export const deleteEvent = (id) => api.delete(`/events/${id}`);
+// Event Registration API (dedicated collection)
+export const registerForEvent = (eventId) => api.post(`/events/${eventId}/register`);
+export const getMyEventRegistrations = () => api.get('/events/registrations/my');
+export const checkEventRegistration = (eventId) => api.get(`/events/${eventId}/registration`);
 // Scholarship API
 export const getScholarships = (params) => api.get('/scholarships', { params });
 export const getScholarship = (id) => api.get(`/scholarships/${id}`);
@@ -46,6 +51,10 @@ export const getJob = (id) => api.get(`/jobs/${id}`);
 export const createJob = (jobData) => api.post('/jobs', jobData);
 export const updateJob = (id, jobData) => api.put(`/jobs/${id}`, jobData);
 export const deleteJob = (id) => api.delete(`/jobs/${id}`);
+// Job Application API (dedicated collection)
+export const applyToJob = (jobId) => api.post(`/jobs/${jobId}/apply`);
+export const getMyJobApplications = () => api.get('/jobs/applications/my');
+export const checkJobApplication = (jobId) => api.get(`/jobs/${jobId}/application`);
 
 // Message API
 export const getMessages = (params) => api.get('/messages', { params });
