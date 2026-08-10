@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, Award, Briefcase, GraduationCap, Users, CheckCircle, Star } from 'lucide-react';
+import { ArrowRight, BookOpen, Award, Briefcase, GraduationCap, Users, CheckCircle, Star, AlertCircle, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import CompanyLogo from '../../components/CompanyLogo';
+import { useCourses } from '../../hooks/useCourses';
 
 const Home = () => {
+  const { courses, loading, isFallback, errorNotice, retry } = useCourses();
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     whileInView: { opacity: 1, y: 0 },
@@ -170,55 +172,135 @@ const Home = () => {
       {/* Featured Courses Section */}
       <section className="py-24 bg-white">
         <div className="container-custom">
-          <div className="flex justify-between items-end mb-12">
+          <div className="flex justify-between items-end mb-8">
             <motion.div {...fadeInUp}>
               <h2 className="text-3xl font-bold text-primary mb-2">Featured Courses</h2>
-              <p className="text-slate-500">Explore our most popular free courses.</p>
+              <p className="text-slate-500">Explore multi-level job-ready courses for Beginner, Intermediate, and Expert learners.</p>
             </motion.div>
             <Link to="/courses" className="hidden md:flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all">
               View All Courses <ArrowRight size={20} />
             </Link>
           </div>
 
-          <motion.div
-            variants={staggerContainer}
-            initial="initial"
-            whileInView="whileInView"
-            viewport={{ once: true }}
-            className="grid md:grid-cols-3 gap-8"
-          >
-            {[
-              { id: 1, title: "Full Stack Web Development", img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", category: "Development", students: "1.2k" },
-              { id: 2, title: "Data Science Fundamentals", img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", category: "Data Science", students: "850" },
-              { id: 3, title: "Digital Marketing Mastery", img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", category: "Marketing", students: "2.5k" }
-            ].map((course) => (
-              <motion.div
-                key={course.id}
-                variants={fadeInUp}
-                className="group bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl hover:border-primary/20 transition-all duration-300"
+          {/* Non-blocking Fallback Notification Banner */}
+          {errorNotice && (
+            <div className="mb-8 p-3 px-4 bg-slate-100 border border-slate-200 text-slate-700 text-xs rounded-xl flex items-center justify-between gap-3">
+              <span className="flex items-center gap-2">
+                <AlertCircle size={16} className="text-amber-500 shrink-0" />
+                <span>{errorNotice}</span>
+              </span>
+              <button
+                onClick={retry}
+                className="px-3 py-1 bg-white hover:bg-slate-200 text-slate-800 font-bold rounded-lg border border-slate-300 transition-colors flex items-center gap-1 shrink-0"
               >
-                <div className="relative h-56 overflow-hidden">
-                  <img src={course.img} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-primary uppercase tracking-wide">
-                    {course.category}
-                  </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-primary transition-colors">{course.title}</h3>
-                  <div className="flex items-center gap-4 text-sm text-slate-500 mb-6">
-                    <span className="flex items-center gap-1"><Users size={14} /> {course.students} Students</span>
-                    <span className="flex items-center gap-1 text-yellow-500"><Star size={14} fill="currentColor" /> 4.8</span>
-                  </div>
-                  <div className="flex justify-between items-center pt-4 border-t border-slate-100">
-                    <span className="text-xs font-semibold px-2 py-1 bg-green-100 text-green-700 rounded">Free</span>
-                    <Link to={`/courses/${course.id}`} className="flex items-center gap-1 text-primary font-semibold text-sm hover:underline">
-                      Enroll Now <ArrowRight size={16} />
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
+                <RefreshCw size={12} /> Retry Live Sync
+              </button>
+            </div>
+          )}
+
+          {loading ? (
+            /* Skeleton Loading Cards */
+            <div className="grid md:grid-cols-3 gap-8">
+              {[1, 2, 3].map((n) => (
+                <div key={n} className="bg-slate-100 animate-pulse rounded-2xl h-96 border border-slate-200" />
+              ))}
+            </div>
+          ) : (
+            <motion.div
+              variants={staggerContainer}
+              initial="initial"
+              whileInView="whileInView"
+              viewport={{ once: true }}
+              className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
+              {courses.map((course) => {
+                const isExt = course.isExternal || course.provider === 'Microsoft' || course.source === 'Microsoft Learn';
+                const levelColor =
+                  course.skillLevel === 'Intermediate' ? 'bg-blue-100 text-blue-800' :
+                  course.skillLevel === 'Expert' ? 'bg-purple-100 text-purple-800' :
+                  'bg-emerald-100 text-emerald-800';
+
+                return (
+                  <motion.div
+                    key={course._id || course.id}
+                    variants={fadeInUp}
+                    className="group bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl hover:border-primary/20 transition-all duration-300 flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="relative h-52 overflow-hidden">
+                        <img
+                          src={course.image || course.thumbnail}
+                          alt={course.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          loading="lazy"
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80';
+                          }}
+                        />
+                        <div className="absolute top-4 left-4 flex flex-col gap-1.5 items-start">
+                          <span className="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-primary uppercase tracking-wide shadow-sm">
+                            {course.category || 'Development'}
+                          </span>
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-sm ${levelColor}`}>
+                            {course.skillLevel || 'Beginner'}
+                          </span>
+                        </div>
+                        {isExt && (
+                          <span className="absolute top-4 right-4 bg-indigo-600/90 text-white backdrop-blur px-2.5 py-1 rounded-full text-[10px] font-bold shadow-sm">
+                            {course.provider || 'Microsoft Learn'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-6">
+                        <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                          {course.title}
+                        </h3>
+                        <p className="text-slate-500 text-sm mb-4 line-clamp-2">
+                          {course.shortDescription || course.description}
+                        </p>
+                        <div className="flex items-center gap-4 text-xs text-slate-500 mb-4 flex-wrap">
+                          <span className="flex items-center gap-1 font-medium">
+                            <Users size={14} className="text-primary" /> {course.studentsEnrolled || 1200} Students
+                          </span>
+                          <span className="flex items-center gap-1 text-yellow-500 font-bold">
+                            <Star size={14} fill="currentColor" /> {course.rating || 4.8}
+                          </span>
+                          <span className="flex items-center gap-1 text-slate-400">
+                            <BookOpen size={14} /> {course.duration || '6 Weeks'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-6 pt-0">
+                      <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+                        <span className="text-xs font-semibold px-2 py-1 bg-green-100 text-green-700 rounded">
+                          100% Free
+                        </span>
+                        {isExt && course.sourceUrl ? (
+                          <a
+                            href={course.sourceUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-1 text-primary font-semibold text-sm hover:underline"
+                          >
+                            Start Learning <ArrowRight size={16} />
+                          </a>
+                        ) : (
+                          <Link
+                            to={course.isFallback ? `/courses` : `/courses/${course._id || course.id}`}
+                            className="flex items-center gap-1 text-primary font-semibold text-sm hover:underline"
+                          >
+                            Enroll Now <ArrowRight size={16} />
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          )}
 
           <div className="mt-8 text-center md:hidden">
             <Link to="/courses" className="btn btn-secondary w-full justify-center">View All Courses</Link>
