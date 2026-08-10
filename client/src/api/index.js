@@ -20,6 +20,13 @@ export const getCourse = (id) => api.get(`/courses/${id}`);
 export const createCourse = (courseData) => api.post('/courses', courseData);
 export const updateCourse = (id, courseData) => api.put(`/courses/${id}`, courseData);
 export const deleteCourse = (id) => api.delete(`/courses/${id}`);
+
+// Dedicated Enrollment API (Internal & External Courses)
+export const createEnrollment = (data) => api.post('/enrollments', data);
+export const getMyEnrollments = () => api.get('/enrollments/my');
+export const checkCourseEnrollment = (courseId) => api.get(`/enrollments/check/${courseId}`);
+export const updateEnrollmentProgress = (courseId, data) => api.patch(`/enrollments/${courseId}/progress`, data);
+export const deleteEnrollment = (courseId) => api.delete(`/enrollments/${courseId}`);
 // Event API
 export const getEvents = (params) => api.get('/events', { params });
 export const getEvent = (id) => api.get(`/events/${id}`);

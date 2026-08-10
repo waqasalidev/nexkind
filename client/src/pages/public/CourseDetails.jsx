@@ -1,8 +1,8 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Clock, Users, Star, BookOpen, CheckCircle, ArrowLeft, PlayCircle, ChevronDown, ChevronUp, Award, Layers, HelpCircle } from 'lucide-react';
+import { Clock, Users, Star, BookOpen, CheckCircle, ArrowLeft, PlayCircle, ChevronDown, ChevronUp, Award, ExternalLink } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { getCourse, getStudentDashboard } from '../../api';
+import { getCourse, createEnrollment, checkCourseEnrollment, updateEnrollmentProgress } from '../../api';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 const CourseDetails = () => {
@@ -11,6 +11,8 @@ const CourseDetails = () => {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [enrollment, setEnrollment] = useState(null);
+  const [submittingEnroll, setSubmittingEnroll] = useState(false);
   const [expandedModules, setExpandedModules] = useState({});
 
   useEffect(() => {
@@ -18,7 +20,6 @@ const CourseDetails = () => {
       try {
         const { data } = await getCourse(id);
         setCourse(data);
-        // Expand first module by default
         if (data.modules && data.modules.length > 0) {
           setExpandedModules({ 0: true });
         }
@@ -29,49 +30,103 @@ const CourseDetails = () => {
       }
     };
 
-    const checkStatus = async () => {
+    const verifyEnrollmentStatus = async () => {
       const userInfo = localStorage.getItem('userInfo');
       if (userInfo) {
         try {
-          const { data } = await getStudentDashboard();
-          const enrolled = data.enrolledCourses.some(enr => enr.course && enr.course._id === id);
-          if (enrolled) setIsEnrolled(true);
+          const { data } = await checkCourseEnrollment(id);
+          if (data && data.isEnrolled) {
+            setIsEnrolled(true);
+            setEnrollment(data.enrollment);
+          }
         } catch (error) {
-          console.error("Failed to check status", error);
+          console.error("Failed to verify enrollment status", error);
         }
       }
     };
 
     fetchCourse();
-    checkStatus();
+    verifyEnrollmentStatus();
   }, [id]);
 
   const toggleModule = (idx) => {
     setExpandedModules(prev => ({ ...prev, [idx]: !prev[idx] }));
   };
 
+  const handleEnroll = async () => {
+    const userInfo = localStorage.getItem('userInfo');
+    if (!userInfo) {
+      toast.error('Please login to enroll in this course.');
+      navigate(`/student/login?redirect=/courses/${id}`);
+      return;
+    }
+
+    try {
+      setSubmittingEnroll(true);
+      const isExt = course.isExternal || course.source === 'Microsoft Learn';
+      const payload = {
+        courseId: id,
+        courseType: isExt ? 'external' : 'internal',
+        externalProvider: course.provider || course.source || 'Microsoft Learn',
+        externalCourseId: course.externalCourseId || id,
+        courseTitle: course.title,
+        sourceUrl: course.enrollLink || course.sourceUrl || 'https://learn.microsoft.com',
+        image: course.image,
+        skillLevel: course.skillLevel || 'Beginner',
+        category: course.category || 'Technology'
+      };
+
+      const { data } = await createEnrollment(payload);
+      setIsEnrolled(true);
+      setEnrollment(data.enrollment);
+
+      if (data.alreadyEnrolled) {
+        toast.success("You are already enrolled in this course!");
+      } else {
+        toast.success("Successfully enrolled in course!");
+      }
+    } catch (error) {
+      console.error("Enrollment error:", error);
+      toast.error("Unable to save your enrollment. Please try again.");
+    } finally {
+      setSubmittingEnroll(false);
+    }
+  };
+
+  const handleStartExternalLearning = async () => {
+    try {
+      await updateEnrollmentProgress(id, { status: 'in-progress' });
+    } catch (err) {
+      console.warn("Could not update access time", err);
+    }
+    const targetUrl = course.enrollLink || course.sourceUrl || 'https://learn.microsoft.com';
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleMarkCompleted = async () => {
+    try {
+      const { data } = await updateEnrollmentProgress(id, { completed: true });
+      if (data && data.enrollment) {
+        setEnrollment(data.enrollment);
+        toast.success("Course marked as completed on NexKind!");
+      }
+    } catch (err) {
+      toast.error("Failed to update status");
+    }
+  };
+
   if (loading) {
-    return <LoadingSpinner fullPage={true} text="Loading course syllabus..." />;
+    return <LoadingSpinner fullPage={true} text="Loading course details..." />;
   }
 
   if (!course) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
         <h2 className="text-2xl font-bold text-slate-800 mb-4">Course Not Found</h2>
-        <Link to="/courses" className="btn btn-primary">Back to Courses</Link>
+        <Link to="/courses" className="btn btn-primary">Back to Course Catalog</Link>
       </div>
     );
   }
-
-  const handleEnroll = () => {
-    const userInfo = localStorage.getItem('userInfo');
-    if (!userInfo) {
-      toast.error('Please login to enroll in this course');
-      navigate('/student/login');
-      return;
-    }
-    navigate(`/courses/${id}/enroll`);
-  };
 
   // Count total lessons
   let totalLessonsCount = 0;
@@ -275,15 +330,51 @@ const CourseDetails = () => {
               <span className="inline-block text-emerald-600 text-xs font-bold mt-1 bg-emerald-50 px-2 py-0.5 rounded">100% Scholarship Sponsored</span>
             </div>
 
+            {/* External Course Flow */}
             {course.isExternal || course.source === 'Microsoft Learn' ? (
-              <a
-                href={course.enrollLink || course.sourceUrl || 'https://learn.microsoft.com'}
-                target="_blank"
-                rel="noreferrer"
-                className="btn btn-primary w-full justify-center mb-4 py-3.5 text-base font-bold shadow-lg shadow-blue-500/20 flex items-center gap-2"
-              >
-                Start Learning on {course.provider || course.source}
-              </a>
+              isEnrolled ? (
+                <div className="space-y-3">
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center justify-between font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle size={16} className="text-emerald-600" /> Enrolled on NexKind
+                    </span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">Active</span>
+                  </div>
+
+                  <button
+                    onClick={handleStartExternalLearning}
+                    className="btn btn-primary w-full justify-center py-3.5 text-base font-bold shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                  >
+                    Start Learning on {course.provider || course.source || 'Microsoft Learn'} <ExternalLink size={18} />
+                  </button>
+
+                  <div className="p-3 bg-slate-50 border border-slate-200 text-slate-600 text-[11px] rounded-xl space-y-1">
+                    <p className="font-semibold text-slate-700">Provided by {course.provider || course.source || 'Microsoft Learn'}</p>
+                    <p className="text-slate-500">External course — learning progress is managed directly on Microsoft Learn.</p>
+                  </div>
+
+                  {enrollment?.status === 'completed' ? (
+                    <div className="p-2.5 bg-purple-50 border border-purple-200 text-purple-800 font-bold text-xs rounded-xl text-center flex items-center justify-center gap-1">
+                      <CheckCircle size={14} /> Completed on NexKind
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleMarkCompleted}
+                      className="w-full text-center text-xs text-slate-500 hover:text-slate-800 font-semibold py-1 hover:underline"
+                    >
+                      Mark as Completed on NexKind
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={handleEnroll}
+                  disabled={submittingEnroll}
+                  className="btn btn-primary w-full justify-center mb-4 py-3.5 text-base font-bold shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                >
+                  {submittingEnroll ? 'Saving Enrollment...' : 'Enroll Now'}
+                </button>
+              )
             ) : isEnrolled ? (
               <button
                 onClick={() => navigate(`/student/courses/${id}/learn`)}
@@ -292,8 +383,12 @@ const CourseDetails = () => {
                 Go to Learning Portal
               </button>
             ) : (
-              <button onClick={handleEnroll} className="btn btn-primary w-full justify-center mb-4 py-3.5 text-base font-bold shadow-lg shadow-blue-500/20">
-                Enroll Now
+              <button
+                onClick={handleEnroll}
+                disabled={submittingEnroll}
+                className="btn btn-primary w-full justify-center mb-4 py-3.5 text-base font-bold shadow-lg shadow-blue-500/20"
+              >
+                {submittingEnroll ? 'Enrolling...' : 'Enroll Now'}
               </button>
             )}
 

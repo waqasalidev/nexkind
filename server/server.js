@@ -87,6 +87,8 @@ app.get('/api/test-ai', async (req, res) => {
   }
 });
 
+const enrollmentRoutes = require('./routes/enrollmentRoutes');
+
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/dashboard', dashboardRoutes);
@@ -97,6 +99,7 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/student', studentRoutes);
+app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/teacher', teacherRoutes);

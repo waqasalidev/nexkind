@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock } from 'lucide-react';
 import Logo from '../../components/common/Logo';
 import { login } from '../../api';
@@ -7,6 +7,9 @@ import toast from 'react-hot-toast';
 
 const Login = ({ role = 'student' }) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTarget = searchParams.get('redirect');
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,10 +27,15 @@ const Login = ({ role = 'student' }) => {
       localStorage.setItem('userInfo', JSON.stringify(data));
 
       toast.success(`Welcome back, ${data.firstName}!`);
-      if (data.role === 'admin') navigate('/admin/dashboard');
-      else if (data.role === 'teacher') navigate('/teacher/dashboard');
-      else navigate('/student/dashboard');
-
+      if (redirectTarget) {
+        navigate(redirectTarget);
+      } else if (data.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else if (data.role === 'teacher') {
+        navigate('/teacher/dashboard');
+      } else {
+        navigate('/student/dashboard');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid email or password');
       console.error(err);
