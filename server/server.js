@@ -21,11 +21,13 @@ const chatRoutes = require('./routes/chatRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const seedData = require('./utils/seeder');
+const { runAllSyncs } = require('./services/integrations/syncManager');
 
 logAiConfig();
 
-connectDB().then(() => {
-  seedData();
+connectDB().then(async () => {
+  await seedData();
+  runAllSyncs().catch(err => console.warn('[SERVER-SYNC] Initial sync error:', err.message));
 });
 
 const app = express();

@@ -149,8 +149,12 @@ const Scholarships = () => {
                     loading="lazy"
                     onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&q=80'; }}
                   />
-                  <span className="absolute top-3 left-3 px-2 py-1 bg-white/90 backdrop-blur text-xs font-bold text-primary rounded-full">
-                    {item.fundingType || 'Merit Award'}
+                  <span className={`absolute top-3 right-3 px-2.5 py-1 backdrop-blur text-xs font-bold rounded-full ${
+                    item.verificationStatus === 'Expired' ? 'bg-rose-600/90 text-white' :
+                    item.verificationStatus === 'Pending Verification' ? 'bg-amber-500/90 text-white' :
+                    'bg-emerald-600/90 text-white'
+                  }`}>
+                    {item.verificationStatus || 'Verified'}
                   </span>
                 </div>
                 <div className="p-5 flex flex-col flex-1">
@@ -177,12 +181,15 @@ const Scholarships = () => {
                       <Link to={`/scholarships/${item._id}`} className="btn btn-primary text-sm py-2 px-4">View Opportunity</Link>
                     </div>
                   </div>
-                  {item.sourceReference && (
-                    <div className="mt-3 text-[11px] text-slate-400 bg-slate-50 p-2 rounded-lg flex items-center justify-between border border-slate-100">
-                      <span>Source: <strong className="text-slate-600">{item.sourceReference}</strong></span>
-                      <span className="text-emerald-600 font-bold">Verified</span>
+                  <div className="mt-3 text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg space-y-1 border border-slate-100">
+                    <div className="flex justify-between items-center font-semibold">
+                      <span>Source: <strong className="text-slate-700">{item.source || item.sourceReference || 'NexKind NGO Partner'}</strong></span>
+                      <span className={item.verificationStatus === 'Expired' ? 'text-rose-600 font-bold' : 'text-emerald-600 font-bold'}>
+                        {item.verificationStatus || 'Verified'}
+                      </span>
                     </div>
-                  )}
+                    <p className="text-[10px] text-slate-400 italic">Verify details on the official scholarship website before applying.</p>
+                  </div>
                 </div>
               </motion.div>
             ))}

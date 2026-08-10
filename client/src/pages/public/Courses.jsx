@@ -144,8 +144,13 @@ const Courses = () => {
                     loading="lazy"
                     onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80'; }}
                   />
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-primary uppercase shadow-sm">
-                    {course.category || 'Education'}
+                  <div className="absolute top-4 left-4 flex flex-col gap-1.5 items-start">
+                    <span className="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-primary uppercase shadow-sm">
+                      {course.category || 'Education'}
+                    </span>
+                    <span className="bg-slate-900/80 text-white backdrop-blur px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-sm">
+                      {course.source || 'NexKind Academy'}
+                    </span>
                   </div>
                   {course.certificateEligible !== false && (
                     <div className="absolute top-4 right-4 bg-emerald-600/90 text-white backdrop-blur px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-sm">

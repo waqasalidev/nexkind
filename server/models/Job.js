@@ -41,6 +41,17 @@ const jobSchema = mongoose.Schema({
     default: 'active',
   },
   applicantsCount: { type: Number, default: 0 },
+  // Integration & Source Metadata
+  source: { type: String, default: 'NexKind NGO Partner' },
+  sourceUrl: { type: String },
+  externalJobId: { type: String },
+  applicationUrl: { type: String },
+  currency: { type: String, default: 'USD' },
+  fetchedAt: { type: Date, default: Date.now },
+  expiresAt: { type: Date },
+  lastSyncedAt: { type: Date, default: Date.now },
 }, { timestamps: true });
+
+jobSchema.index({ source: 1, externalJobId: 1 }, { sparse: true });
 
 module.exports = mongoose.model('Job', jobSchema);

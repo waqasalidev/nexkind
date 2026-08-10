@@ -5,7 +5,8 @@ import {
   Award, Sparkles, UserPlus, Menu, LogOut
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getAdminAnalytics } from '../../api';
+import toast from 'react-hot-toast';
+import { getAdminAnalytics, triggerDataSync } from '../../api';
 import CourseManager from '../../components/admin/CourseManager';
 import EventManager from '../../components/admin/EventManager';
 import ScholarshipManager from '../../components/admin/ScholarshipManager';
@@ -178,9 +179,25 @@ const AdminDashboard = () => {
       case 'overview':
         return (
           <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
-            <div>
-              <h2 className="text-3xl font-bold text-slate-800">Dashboard Overview</h2>
-              <p className="text-slate-500 mt-1">Welcome back, {user?.firstName}!</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-3xl font-bold text-slate-800">Dashboard Overview</h2>
+                <p className="text-slate-500 mt-1">Welcome back, {user?.firstName}!</p>
+              </div>
+              <button
+                onClick={async () => {
+                  try {
+                    toast.loading('Syncing external data sources...', { id: 'datasync' });
+                    await triggerDataSync();
+                    toast.success('Data synchronization complete!', { id: 'datasync' });
+                  } catch (err) {
+                    toast.error('Sync failed. Check network.', { id: 'datasync' });
+                  }
+                }}
+                className="btn btn-primary px-4 py-2 text-xs font-bold flex items-center gap-2 shadow-md shrink-0"
+              >
+                <Sparkles size={16} /> Sync External Feeds
+              </button>
             </div>
 
             {loading ? (

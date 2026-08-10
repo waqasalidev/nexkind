@@ -97,4 +97,54 @@ const getAdminAnalytics = async (req, res) => {
   }
 };
 
-module.exports = { getAdminAnalytics };
+// @desc    Trigger On-demand Data Synchronization
+// @route   POST /api/admin/sync
+// @access  Private/Admin
+const triggerDataSync = async (req, res) => {
+  try {
+    const { runAllSyncs } = require('../services/integrations/syncManager');
+    const result = await runAllSyncs();
+    res.json({ success: true, result });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Data sync failed', error: error.message });
+  }
+};
+
+// @desc    Get Current Data Sync Status
+// @route   GET /api/admin/sync/status
+// @access  Private/Admin
+const getDataSyncStatus = async (req, res) => {
+  try {
+    const { getSyncStatus } = require('../services/integrations/syncManager');
+    res.json({ success: true, status: getSyncStatus() });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc    Verify / Approve Scholarship Record
+// @route   PUT /api/admin/scholarships/:id/verify
+// @access  Private/Admin
+const verifyScholarship = async (req, res) => {
+  try {
+    const { verificationStatus } = req.body;
+    const scholarship = await Scholarship.findById(req.params.id);
+    if (!scholarship) {
+      return res.status(404).json({ message: 'Scholarship not found' });
+    }
+
+    scholarship.verificationStatus = verificationStatus || 'Verified';
+    scholarship.lastVerifiedAt = new Date();
+    const updated = await scholarship.save();
+    res.json({ success: true, message: 'Scholarship status updated', scholarship: updated });
+  } catch (error) {
+    res.status(400).json({ message: 'Verification update failed', error: error.message });
+  }
+};
+
+module.exports = {
+  getAdminAnalytics,
+  triggerDataSync,
+  getDataSyncStatus,
+  verifyScholarship
+};

@@ -43,6 +43,17 @@ const eventSchema = mongoose.Schema({
 
   // Meta
   registrationLink: { type: String }, // optional
+  // Integration & Source Metadata
+  registrationUrl: { type: String },
+  online: { type: Boolean, default: false },
+  country: { type: String, default: 'Global' },
+  city: { type: String, default: 'Online' },
+  source: { type: String, default: 'NexKind NGO Community' },
+  sourceUrl: { type: String },
+  externalEventId: { type: String },
+  lastSyncedAt: { type: Date, default: Date.now },
 }, { timestamps: true });
+
+eventSchema.index({ source: 1, externalEventId: 1 }, { sparse: true });
 
 module.exports = mongoose.model('Event', eventSchema);

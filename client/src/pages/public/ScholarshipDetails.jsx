@@ -100,15 +100,31 @@ const ScholarshipDetails = () => {
               </div>
             </div>
 
-            {hasApplied ? (
-              <button disabled className="btn bg-green-50 text-green-700 border border-green-200 px-8 py-4 text-lg shadow-none cursor-not-allowed">
-                <CheckCircle size={20} className="mr-2" /> Applied
-              </button>
-            ) : (
-              <button onClick={handleApply} className="btn btn-secondary px-8 py-4 text-lg shadow-lg shadow-amber-500/20">
-                Apply Now
-              </button>
-            )}
+            <div className="flex flex-col gap-3">
+              {scholarship.applyLink || scholarship.sourceUrl || scholarship.providerLink ? (
+                <a
+                  href={scholarship.applyLink || scholarship.sourceUrl || scholarship.providerLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-secondary px-8 py-4 text-base font-bold shadow-lg shadow-amber-500/20 text-center"
+                >
+                  Apply on Official Provider Website
+                </a>
+              ) : hasApplied ? (
+                <button disabled className="btn bg-green-50 text-green-700 border border-green-200 px-8 py-4 text-lg shadow-none cursor-not-allowed">
+                  <CheckCircle size={20} className="mr-2" /> Applied
+                </button>
+              ) : (
+                <button onClick={handleApply} className="btn btn-secondary px-8 py-4 text-lg shadow-lg shadow-amber-500/20">
+                  Apply Now
+                </button>
+              )}
+
+              <div className="p-3 bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-xl flex items-start gap-2 max-w-sm">
+                <span className="font-bold shrink-0">NOTICE:</span>
+                <span>Verify details on the official scholarship website before applying.</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

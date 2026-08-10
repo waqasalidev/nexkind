@@ -71,7 +71,16 @@ const courseSchema = mongoose.Schema({
   modules: [moduleSchema],
   image: { type: String },
   enrollLink: { type: String },
+  // Integration & Source Metadata
+  source: { type: String, default: 'NexKind' },
+  sourceUrl: { type: String },
+  externalCourseId: { type: String },
+  provider: { type: String, default: 'NexKind Academy' },
+  isExternal: { type: Boolean, default: false },
+  lastSyncedAt: { type: Date, default: Date.now },
 }, { timestamps: true });
+
+courseSchema.index({ source: 1, externalCourseId: 1 }, { sparse: true });
 
 module.exports = mongoose.model('Course', courseSchema);
 

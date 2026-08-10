@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, X } from 'lucide-react';
 import AdminTable, { AdminModal, FormInput, FormTextArea, ConfirmDialog } from './AdminComponents';
-import { getScholarships, createScholarship, updateScholarship, deleteScholarship } from '../../api';
+import { getScholarships, createScholarship, updateScholarship, deleteScholarship, verifyScholarship } from '../../api';
 
 const ScholarshipManager = () => {
   const [scholarships, setScholarships] = useState([]);
@@ -56,13 +56,43 @@ const ScholarshipManager = () => {
     fetchScholarships(pagination.page);
   }, [pagination.page]);
 
+  const handleVerify = async (id, status = 'Verified') => {
+    try {
+      await verifyScholarship(id, { verificationStatus: status });
+      fetchScholarships(pagination.page);
+    } catch (err) {
+      console.error("Failed to verify scholarship", err);
+    }
+  };
+
   const columns = [
     { header: 'Title', accessor: 'title' },
     { header: 'Provider', accessor: 'provider' },
     { header: 'Amount', accessor: 'amount' },
-    { header: 'Applicants', accessor: 'applicantsCount', render: (item) => <span className="font-semibold text-slate-700">{item.applicantsCount || 0}</span> },
-    { header: 'Deadline', accessor: 'deadline', render: (item) => <span className="text-red-500 font-medium">{item.deadline}</span> },
-    { header: 'Category', accessor: 'category', render: (item) => <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">{item.category}</span> }
+    { header: 'Deadline', accessor: 'deadline', render: (item) => <span className="text-red-500 font-medium text-xs">{item.deadline}</span> },
+    { 
+      header: 'Verification', 
+      accessor: 'verificationStatus',
+      render: (item) => (
+        <div className="flex items-center gap-2">
+          <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+            item.verificationStatus === 'Expired' ? 'bg-rose-100 text-rose-700' :
+            item.verificationStatus === 'Pending Verification' ? 'bg-amber-100 text-amber-800' :
+            'bg-emerald-100 text-emerald-700'
+          }`}>
+            {item.verificationStatus || 'Verified'}
+          </span>
+          {item.verificationStatus !== 'Verified' && (
+            <button
+              onClick={() => handleVerify(item._id, 'Verified')}
+              className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[11px] font-bold"
+            >
+              Verify
+            </button>
+          )}
+        </div>
+      )
+    }
   ];
 
   const handleOpenModal = (item = null) => {

@@ -36,6 +36,20 @@ const scholarshipSchema = mongoose.Schema({
   isPartnerListing: { type: Boolean, default: true },
   image: { type: String },
   applicantsCount: { type: Number, default: 0 },
+  // Integration & Source Metadata
+  organization: { type: String },
+  source: { type: String, default: 'NexKind NGO Verified' },
+  sourceUrl: { type: String },
+  externalScholarshipId: { type: String },
+  verificationStatus: {
+    type: String,
+    enum: ['Verified', 'Pending Verification', 'Expired', 'Archived'],
+    default: 'Verified'
+  },
+  lastVerifiedAt: { type: Date, default: Date.now },
+  lastSyncedAt: { type: Date, default: Date.now },
 }, { timestamps: true });
+
+scholarshipSchema.index({ source: 1, externalScholarshipId: 1 }, { sparse: true });
 
 module.exports = mongoose.model('Scholarship', scholarshipSchema);

@@ -91,6 +91,9 @@ export const updateChatSettings = (data) => api.put('/chat/settings', data);
 // Advanced Admin Analytics & Management API
 export const getAdminAnalytics = () => api.get('/admin/analytics');
 export const createAdminUser = (data) => api.post('/users', data);
+export const triggerDataSync = () => api.post('/admin/sync');
+export const getDataSyncStatus = () => api.get('/admin/sync/status');
+export const verifyScholarship = (id, data) => api.put(`/admin/scholarships/${id}/verify`, data);
 
 // Dedicated Teacher / Mentor API
 export const getTeacherStudents = () => api.get('/teacher/students');

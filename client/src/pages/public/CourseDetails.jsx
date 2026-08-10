@@ -99,6 +99,9 @@ const CourseDetails = () => {
           <div className="max-w-3xl">
             <div className="flex flex-wrap gap-2 mb-4">
               <span className="bg-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">{course.category || 'Education'}</span>
+              <span className="bg-indigo-600/90 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+                Source: {course.source || 'NexKind Academy'}
+              </span>
               {course.certificateEligible !== false && (
                 <span className="bg-emerald-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide flex items-center gap-1">
                   <Award size={12} /> Certificate Eligible
@@ -272,7 +275,16 @@ const CourseDetails = () => {
               <span className="inline-block text-emerald-600 text-xs font-bold mt-1 bg-emerald-50 px-2 py-0.5 rounded">100% Scholarship Sponsored</span>
             </div>
 
-            {isEnrolled ? (
+            {course.isExternal || course.source === 'Microsoft Learn' ? (
+              <a
+                href={course.enrollLink || course.sourceUrl || 'https://learn.microsoft.com'}
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-primary w-full justify-center mb-4 py-3.5 text-base font-bold shadow-lg shadow-blue-500/20 flex items-center gap-2"
+              >
+                Start Learning on {course.provider || course.source}
+              </a>
+            ) : isEnrolled ? (
               <button
                 onClick={() => navigate(`/student/courses/${id}/learn`)}
                 className="btn btn-success w-full justify-center mb-4 py-3.5 text-base font-bold shadow-lg shadow-emerald-500/20"
