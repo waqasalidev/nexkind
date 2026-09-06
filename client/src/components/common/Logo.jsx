@@ -4,124 +4,147 @@ import { Link } from 'react-router-dom';
 const SIZES = {
   sm: {
     container: 'h-8 text-base gap-2 font-extrabold tracking-tight',
-    iconSize: 'w-8 h-8',
+    iconSize: 'w-7 h-7',
     textSize: 'text-base',
+    tagline: 'text-[9px]',
   },
   md: {
     container: 'h-10 text-lg gap-2.5 font-extrabold tracking-tight',
-    iconSize: 'w-10 h-10',
+    iconSize: 'w-9 h-9',
     textSize: 'text-lg',
+    tagline: 'text-[10px]',
   },
   lg: {
     container: 'h-14 text-2xl gap-3 font-extrabold tracking-tight',
     iconSize: 'w-12 h-12',
     textSize: 'text-2xl',
+    tagline: 'text-xs',
   },
   xl: {
-    container: 'h-20 text-3xl gap-4 font-extrabold tracking-tight',
+    container: 'h-20 text-3xl gap-3.5 font-extrabold tracking-tight',
     iconSize: 'w-16 h-16',
     textSize: 'text-3xl',
+    tagline: 'text-sm',
   },
 };
 
+/**
+ * NexKind Non-Profit Logo
+ * Visual symbolism:
+ * 1. Supportive humanitarian hands / cradle: Community, helping people, social impact foundation.
+ * 2. Rising open book / wings of learning: Education, knowledge, opportunities, empowerment.
+ * 3. Radiant rising star / spark: Hope, enlightenment, growth, brighter future.
+ * 4. Harmonious palette: Deep humanitarian blue + hopeful emerald + warm amber gold.
+ */
 const Logo = memo(({
   size = 'md',
   variant = 'light',
   iconOnly = false,
   animated = true,
   to = '/',
+  showTagline = false,
   className = '',
 }) => {
   const sizeConfig = SIZES[size] || SIZES.md;
   const uniqueId = useId();
   const idSuffix = uniqueId.replace(/:/g, '');
 
-  // Decide if background is dark/white
-  const isDarkBackground = variant === 'white' || variant === 'dark';
-
-  let textClass = 'text-slate-800';
-  let primaryTextClass = 'text-primary';
-  let secondaryTextClass = 'text-secondary';
+  let primaryTextClass = 'text-slate-900';
+  let secondaryTextClass = 'text-emerald-600';
+  let taglineClass = 'text-slate-500';
 
   if (variant === 'white') {
-    textClass = 'text-white';
     primaryTextClass = 'text-white';
-    secondaryTextClass = 'text-secondary';
+    secondaryTextClass = 'text-emerald-400';
+    taglineClass = 'text-slate-300';
   } else if (variant === 'dark') {
-    textClass = 'text-slate-200';
     primaryTextClass = 'text-white';
     secondaryTextClass = 'text-amber-400';
+    taglineClass = 'text-slate-400';
   } else {
     // default light
-    textClass = 'text-slate-800';
-    primaryTextClass = 'text-primary';
-    secondaryTextClass = 'text-secondary';
+    primaryTextClass = 'text-slate-900';
+    secondaryTextClass = 'text-emerald-600';
+    taglineClass = 'text-slate-500';
   }
-
-  // Always use the official brand color gradients for the icon to ensure 100% branding consistency
-  // across all pages, footers, sidebars, loading spinners, and the browser tab favicon.
-  const primaryGradStops = { stop1: '#2563eb', stop2: '#1e3a8a' }; // Official NexKind blue
-  const secondaryGradStops = { stop1: '#f59e0b', stop2: '#d97706' }; // Official NexKind amber
-  const accentGradStops = { stop1: '#3b82f6', stop2: '#60a5fa' }; // Official NexKind accent/glow
 
   const LogoIcon = (
     <svg
-      className={`${sizeConfig.iconSize} shrink-0 ${animated ? 'group-hover:scale-110 group-hover:rotate-2 transition-all duration-300 ease-out' : ''}`}
+      className={`${sizeConfig.iconSize} shrink-0 ${
+        animated ? 'group-hover:scale-105 transition-transform duration-300 ease-out' : ''
+      }`}
       viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-label="NexKind Non-Profit Mark"
     >
       <defs>
-        <linearGradient id={`logo-primary-grad-${idSuffix}`} x1="20" y1="12" x2="50" y2="85" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={primaryGradStops.stop1} />
-          <stop offset="100%" stopColor={primaryGradStops.stop2} />
+        {/* Blue Foundation / Hands Gradient */}
+        <linearGradient id={`np-blue-${idSuffix}`} x1="16" y1="42" x2="84" y2="88" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#2563eb" />
+          <stop offset="100%" stopColor="#1e3a8a" />
         </linearGradient>
-        <linearGradient id={`logo-secondary-grad-${idSuffix}`} x1="80" y1="12" x2="50" y2="85" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={secondaryGradStops.stop1} />
-          <stop offset="100%" stopColor={secondaryGradStops.stop2} />
+
+        {/* Emerald Education / Book Pages Gradient */}
+        <linearGradient id={`np-emerald-${idSuffix}`} x1="28" y1="28" x2="72" y2="76" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#10b981" />
+          <stop offset="100%" stopColor="#047857" />
         </linearGradient>
-        <linearGradient id={`logo-accent-grad-${idSuffix}`} x1="39" y1="12" x2="61" y2="34" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={accentGradStops.stop1} />
-          <stop offset="100%" stopColor={accentGradStops.stop2} />
+
+        {/* Gold / Amber Radiant Star Gradient */}
+        <linearGradient id={`np-gold-${idSuffix}`} x1="42" y1="6" x2="58" y2="28" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#fbbf24" />
+          <stop offset="100%" stopColor="#d97706" />
         </linearGradient>
-        <filter id={`logo-glow-${idSuffix}`} x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
+
+        {/* Soft Aura Glow */}
+        <filter id={`np-glow-${idSuffix}`} x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2.5" result="blur" />
           <feComposite in="SourceGraphic" in2="blur" operator="over" />
         </filter>
       </defs>
-      
-      {/* Background soft glow under icon on hover */}
-      {animated && (
-        <circle
-          cx="50"
-          cy="50"
-          r="35"
-          fill={`url(#logo-accent-grad-${idSuffix})`}
-          className="opacity-0 group-hover:opacity-15 transition-opacity duration-500"
-        />
-      )}
 
-      {/* Left Wing (Book Page / Heart Half) */}
+      {/* 1. Supportive Humanitarian Hands / Cradle (Community & Helping People) */}
+      {/* Left Supportive Hand */}
       <path
-        d="M50 85C30 75 20 55 20 38C20 22 32 12 46 22C49 24 50 27 50 27C50 27 47 24 43 24C34 24 28 32 28 48C28 60 36 72 50 78Z"
-        fill={`url(#logo-primary-grad-${idSuffix})`}
-        className={`${animated ? 'group-hover:translate-x-[-1.5px] transition-transform duration-300 ease-out' : ''}`}
+        d="M50 88C36 88 22 79 16 66C13 60 14 53 19 48C21 46 25 46 27 49C29 52 28 56 26 59C30 68 40 75 50 76V88Z"
+        fill={`url(#np-blue-${idSuffix})`}
+      />
+      {/* Right Supportive Hand */}
+      <path
+        d="M50 88C64 88 78 79 84 66C87 60 86 53 81 48C79 46 75 46 73 49C71 52 72 56 74 59C70 68 60 75 50 76V88Z"
+        fill={`url(#np-blue-${idSuffix})`}
       />
 
-      {/* Right Wing (Book Page / Heart Half) */}
+      {/* 2. Open Book of Knowledge / Wings of Education & Opportunity */}
+      {/* Left Page (Education & Growth) */}
       <path
-        d="M50 85C70 75 80 55 80 38C80 22 68 12 54 22C51 24 50 27 50 27C50 27 53 24 57 24C66 24 72 32 72 48C72 60 64 72 50 78Z"
-        fill={`url(#logo-secondary-grad-${idSuffix})`}
-        className={`${animated ? 'group-hover:translate-x-[1.5px] transition-transform duration-300 ease-out' : ''}`}
+        d="M50 72C42 66 32 58 25 44C22 38 23 31 28 27C31 24 35 25 38 28C43 33 47 43 50 54V72Z"
+        fill={`url(#np-emerald-${idSuffix})`}
+      />
+      {/* Right Page (Education & Growth) */}
+      <path
+        d="M50 72C58 66 68 58 75 44C78 38 77 31 72 27C69 24 65 25 62 28C57 33 53 43 50 54V72Z"
+        fill={`url(#np-emerald-${idSuffix})`}
       />
 
-      {/* Center Star (Spark of Knowledge) */}
+      {/* Inner Heart contour / center stem connecting community to learning */}
       <path
-        d="M50 10L53.5 19L62.5 22.5L53.5 26L50 35L46.5 26L37.5 22.5L46.5 19Z"
-        fill={`url(#logo-accent-grad-${idSuffix})`}
-        filter={`url(#logo-glow-${idSuffix})`}
-        className={`${animated ? 'animate-pulse' : ''}`}
+        d="M50 74C47 68 44 58 44 48C44 42 47 38 50 38C53 38 56 42 56 48C56 58 53 68 50 74Z"
+        fill="#ffffff"
+        fillOpacity="0.85"
       />
+
+      {/* 3. Radiant Star of Hope / Enlightenment (Radiating Opportunities) */}
+      <path
+        d="M50 8L52.8 17.5L62 18.5L55 24.2L57.2 33.5L50 28.5L42.8 33.5L45 24.2L38 18.5L47.2 17.5Z"
+        fill={`url(#np-gold-${idSuffix})`}
+        filter={`url(#np-glow-${idSuffix})`}
+        className={animated ? 'animate-pulse' : ''}
+      />
+
+      {/* Center core point */}
+      <circle cx="50" cy="22" r="2.5" fill="#ffffff" />
     </svg>
   );
 
@@ -129,12 +152,17 @@ const Logo = memo(({
     <div className={`flex items-center select-none ${sizeConfig.container} ${className}`}>
       {LogoIcon}
       {!iconOnly && (
-        <span
-          className={`font-extrabold tracking-tight ${sizeConfig.textSize} ${animated ? 'group-hover:translate-x-[1px] transition-transform duration-300' : ''}`}
-        >
-          <span className={primaryTextClass}>Nex</span>
-          <span className={secondaryTextClass}>Kind</span>
-        </span>
+        <div className="flex flex-col justify-center leading-none">
+          <div className={`font-extrabold tracking-tight ${sizeConfig.textSize} flex items-center`}>
+            <span className={primaryTextClass}>Nex</span>
+            <span className={secondaryTextClass}>Kind</span>
+          </div>
+          {(showTagline || size === 'lg' || size === 'xl') && (
+            <span className={`${sizeConfig.tagline} ${taglineClass} font-semibold tracking-widest uppercase mt-0.5`}>
+              Non-Profit Foundation
+            </span>
+          )}
+        </div>
       )}
     </div>
   );
@@ -147,11 +175,7 @@ const Logo = memo(({
     );
   }
 
-  return (
-    <div className="group">
-      {content}
-    </div>
-  );
+  return <div className="group">{content}</div>;
 });
 
 Logo.displayName = 'Logo';

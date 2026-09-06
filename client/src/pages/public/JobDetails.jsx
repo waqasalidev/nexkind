@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { getJob, toggleSaveJob, getStudentDashboard } from '../../api';
 import CompanyLogo from '../../components/CompanyLogo';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { fallbackJobs } from '../../data/fallbackJobs';
 import toast from 'react-hot-toast';
 
 const JobDetails = () => {
@@ -16,13 +17,25 @@ const JobDetails = () => {
   useEffect(() => {
     const fetchJob = async () => {
       try {
-        const { data } = await getJob(id);
-        setJob(data);
+        const fetchPromise = getJob(id);
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Job timeout')), 3500)
+        );
+        const res = await Promise.race([fetchPromise, timeoutPromise]);
+        if (res?.data) {
+          setJob(res.data);
+          return;
+        }
       } catch (error) {
-        console.error("Failed to fetch job details", error);
-      } finally {
-        setLoading(false);
+        console.warn("API getJob failed, trying fallback:", error.message);
       }
+
+      // Check fallback jobs
+      const fb = fallbackJobs.find((j) => j._id === id || j.id === id);
+      if (fb) {
+        setJob(fb);
+      }
+      setLoading(false);
     };
 
     const checkStatus = async () => {
@@ -30,7 +43,7 @@ const JobDetails = () => {
       if (userInfo) {
         try {
           const { data } = await getStudentDashboard();
-          const isApplied = data.appliedJobs.some(app => app.job && app.job._id === id);
+          const isApplied = data?.appliedJobs?.some(app => app.job && (app.job._id === id || app.job.id === id));
           if (isApplied) setHasApplied(true);
         } catch (error) {
           console.error("Failed to check status", error);
@@ -101,7 +114,16 @@ const JobDetails = () => {
               </div>
             </div>
             <div className="flex flex-col gap-3 min-w-[200px]">
-              {hasApplied ? (
+              {job.applyLink ? (
+                <a
+                  href={job.applyLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary justify-center py-3 text-lg inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all"
+                >
+                  Apply on Portal <Globe size={18} />
+                </a>
+              ) : hasApplied ? (
                 <button disabled className="btn bg-green-50 text-green-700 border border-green-200 justify-center py-3 text-lg cursor-not-allowed">
                   <CheckCircle size={20} className="mr-2" /> Applied
                 </button>

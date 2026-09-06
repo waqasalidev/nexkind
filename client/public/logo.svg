@@ -1,31 +1,43 @@
 <svg viewBox="0 0 280 80" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="primary-grad" x1="20" y1="12" x2="50" y2="85" gradientUnits="userSpaceOnUse">
+    <linearGradient id="np-blue-logo" x1="16" y1="42" x2="84" y2="88" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#2563eb" />
       <stop offset="100%" stop-color="#1e3a8a" />
     </linearGradient>
-    <linearGradient id="secondary-grad" x1="80" y1="12" x2="50" y2="85" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#f59e0b" />
+    <linearGradient id="np-emerald-logo" x1="28" y1="28" x2="72" y2="76" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <linearGradient id="np-gold-logo" x1="42" y1="6" x2="58" y2="28" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fbbf24" />
       <stop offset="100%" stop-color="#d97706" />
     </linearGradient>
-    <linearGradient id="accent-grad" x1="39" y1="12" x2="61" y2="34" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#3b82f6" />
-      <stop offset="100%" stop-color="#60a5fa" />
-    </linearGradient>
-    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
-      <feGaussianBlur stdDeviation="2" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
   </defs>
+
   <!-- Icon Group -->
-  <g transform="translate(5, 0)">
-    <path d="M40 70C24 62 16 46 16 32.4C16 19.6 25.6 11.6 36.8 19.6C39.2 21.2 40 23.6 40 23.6C40 23.6 37.6 21.2 34.4 21.2C27.2 21.2 22.4 27.6 22.4 40.4C22.4 50 28.8 59.6 40 64.4Z" fill="url(#primary-grad)" />
-    <path d="M40 70C56 62 64 46 64 32.4C64 19.6 54.4 11.6 43.2 19.6C40.8 21.2 40 23.6 40 23.6C40 23.6 42.4 21.2 45.6 21.2C52.8 21.2 57.6 27.6 57.6 40.4C57.6 50 51.2 59.6 40 64.4Z" fill="url(#secondary-grad)" />
-    <path d="M40 10L42.8 17.2L50 19.4L42.8 21.6L40 28.8L37.2 21.6L30 19.4L37.2 17.2Z" fill="url(#accent-grad)" filter="url(#glow)" />
+  <g transform="translate(6, 4) scale(0.72)">
+    <!-- 1. Supportive Hands -->
+    <path d="M50 88C36 88 22 79 16 66C13 60 14 53 19 48C21 46 25 46 27 49C29 52 28 56 26 59C30 68 40 75 50 76V88Z" fill="url(#np-blue-logo)" />
+    <path d="M50 88C64 88 78 79 84 66C87 60 86 53 81 48C79 46 75 46 73 49C71 52 72 56 74 59C70 68 60 75 50 76V88Z" fill="url(#np-blue-logo)" />
+
+    <!-- 2. Book Pages -->
+    <path d="M50 72C42 66 32 58 25 44C22 38 23 31 28 27C31 24 35 25 38 28C43 33 47 43 50 54V72Z" fill="url(#np-emerald-logo)" />
+    <path d="M50 72C58 66 68 58 75 44C78 38 77 31 72 27C69 24 65 25 62 28C57 33 53 43 50 54V72Z" fill="url(#np-emerald-logo)" />
+
+    <!-- Center heart silhouette -->
+    <path d="M50 74C47 68 44 58 44 48C44 42 47 38 50 38C53 38 56 42 56 48C56 58 53 68 50 74Z" fill="#ffffff" fill-opacity="0.85" />
+
+    <!-- 3. Radiant Star of Hope -->
+    <path d="M50 8L52.8 17.5L62 18.5L55 24.2L57.2 33.5L50 28.5L42.8 33.5L45 24.2L38 18.5L47.2 17.5Z" fill="url(#np-gold-logo)" />
+    <circle cx="50" cy="22" r="2.5" fill="#ffffff" />
   </g>
+
   <!-- Text Group -->
-  <text x="90" y="52" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="34" font-weight="800" letter-spacing="-0.5px">
-    <tspan fill="#1e3a8a">Nex</tspan>
-    <tspan fill="#f59e0b">Kind</tspan>
+  <text x="88" y="47" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="32" font-weight="800" letter-spacing="-0.5px">
+    <tspan fill="#0f172a">Nex</tspan>
+    <tspan fill="#059669">Kind</tspan>
+  </text>
+  <text x="89" y="62" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" letter-spacing="2.5px" fill="#64748b">
+    NON-PROFIT FOUNDATION
   </text>
 </svg>

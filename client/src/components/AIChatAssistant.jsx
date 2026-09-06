@@ -12,6 +12,8 @@ import {
 import { getChatSessionId } from '../utils/chatSession';
 import { isLoggedIn, getStoredUser } from '../utils/auth';
 import toast from 'react-hot-toast';
+import ChatMarkdown from './common/ChatMarkdown';
+import ChatbotAvatar from './common/ChatbotAvatar';
 
 const TypingIndicator = memo(() => (
   <div className="flex items-center gap-1.5 px-4 py-3">
@@ -29,20 +31,24 @@ TypingIndicator.displayName = 'TypingIndicator';
 const ChatBubble = memo(({ msg }) => (
   <div className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
     {msg.role === 'assistant' && (
-      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shrink-0 mt-1">
-        <Bot size={16} />
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-400/20 flex items-center justify-center shrink-0 mt-1 shadow-sm">
+        <ChatbotAvatar size="xs" />
       </div>
     )}
     <div
-      className={`max-w-[85%] md:max-w-[70%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+      className={`max-w-[88%] md:max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
         msg.role === 'user'
           ? 'bg-indigo-600 text-white rounded-tr-sm'
           : msg.isError
           ? 'bg-red-900/40 border border-red-500/30 text-red-200 rounded-tl-sm'
-          : 'bg-white/10 backdrop-blur-md border border-white/10 text-slate-100 rounded-tl-sm'
+          : 'bg-white/10 backdrop-blur-md border border-white/10 text-slate-100 rounded-tl-sm shadow-sm'
       }`}
     >
-      <p className="whitespace-pre-wrap">{msg.content}</p>
+      {msg.role === 'user' ? (
+        <p className="whitespace-pre-wrap">{msg.content}</p>
+      ) : (
+        <ChatMarkdown content={msg.content} />
+      )}
     </div>
     {msg.role === 'user' && (
       <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center shrink-0 mt-1">
@@ -324,9 +330,9 @@ const AIChatAssistant = ({ embedded = false, onClose }) => {
             >
               {sidebarOpen ? <PanelLeftClose size={20} /> : <PanelLeft size={20} />}
             </button>
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                <Bot size={18} />
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full bg-indigo-950/60 border border-indigo-500/30 flex items-center justify-center shadow-inner">
+                <ChatbotAvatar size="sm" />
               </div>
               <div>
                 <h2 className="font-bold text-sm">NexKind AI Assistant</h2>
@@ -367,8 +373,8 @@ const AIChatAssistant = ({ embedded = false, onClose }) => {
           ))}
           {isWaiting && (
             <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shrink-0">
-                <Bot size={16} />
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-400/20 flex items-center justify-center shrink-0">
+                <ChatbotAvatar size="xs" animated={true} />
               </div>
               <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl rounded-tl-sm">
                 <TypingIndicator />

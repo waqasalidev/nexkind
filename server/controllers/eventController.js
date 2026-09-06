@@ -1,5 +1,6 @@
 const Event = require('../models/Event');
 const { buildEventQuery } = require('../utils/buildQuery');
+const { getEventsData } = require('../utils/eventsData');
 
 // @desc    Create a new event
 // @route   POST /api/events
@@ -59,22 +60,55 @@ const getEvents = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const filter = buildEventQuery(req.query);
-    const count = await Event.countDocuments(filter);
 
-    let events = await Event.find(filter).sort({ createdAt: -1 });
+    let events = [];
+    try {
+      events = await Event.find(filter).sort({ createdAt: -1 });
+    } catch (dbErr) {
+      console.warn('[EVENTS] DB query warning:', dbErr.message);
+      events = [];
+    }
 
-    // Client-side / filter parameter for upcoming vs past if requested
-    const now = new Date();
+    // Safe date comparison
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
     if (req.query.timeframe === 'upcoming') {
-      events = events.filter(e => {
+      events = events.filter((e) => {
         const eventDate = new Date(e.date);
-        return isNaN(eventDate.getTime()) || eventDate >= new Date(now.setHours(0,0,0,0));
+        return isNaN(eventDate.getTime()) || eventDate >= startOfToday;
       });
     } else if (req.query.timeframe === 'past') {
-      events = events.filter(e => {
+      events = events.filter((e) => {
         const eventDate = new Date(e.date);
-        return !isNaN(eventDate.getTime()) && eventDate < new Date(now.setHours(0,0,0,0));
+        return !isNaN(eventDate.getTime()) && eventDate < startOfToday;
       });
+    }
+
+    // If database returned 0 events or 0 upcoming events, serve from curated events dataset
+    if (events.length === 0 && req.query.timeframe !== 'past') {
+      let fallbackList = getEventsData();
+      if (req.query.country) {
+        fallbackList = fallbackList.filter(
+          (e) => e.country && e.country.toLowerCase().includes(req.query.country.toLowerCase())
+        );
+      }
+      if (req.query.category) {
+        fallbackList = fallbackList.filter(
+          (e) => e.category && e.category.toLowerCase().includes(req.query.category.toLowerCase())
+        );
+      }
+      if (req.query.search) {
+        const s = req.query.search.toLowerCase();
+        fallbackList = fallbackList.filter(
+          (e) =>
+            (e.title && e.title.toLowerCase().includes(s)) ||
+            (e.description && e.description.toLowerCase().includes(s)) ||
+            (e.location && e.location.toLowerCase().includes(s)) ||
+            (e.country && e.country.toLowerCase().includes(s))
+        );
+      }
+      events = fallbackList;
     }
 
     if (req.query.page && req.query.limit) {
@@ -83,14 +117,16 @@ const getEvents = async (req, res) => {
       return res.json({
         events: paginatedEvents,
         page,
-        pages: Math.ceil(events.length / limit),
-        total: events.length
+        pages: Math.ceil(events.length / limit) || 1,
+        total: events.length,
       });
     } else {
       return res.json(events);
     }
   } catch (error) {
-    res.status(500).json({ message: 'Server Error', error: error.message });
+    console.error('[EVENTS] getEvents error:', error.message);
+    const fallbackList = getEventsData();
+    return res.json(fallbackList);
   }
 };
 
@@ -99,14 +135,26 @@ const getEvents = async (req, res) => {
 // @access  Public
 const getEventById = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id);
+    let event = null;
+    try {
+      event = await Event.findById(req.params.id);
+    } catch {
+      event = null;
+    }
+
+    if (!event) {
+      // Check fallback events
+      const fallbackList = getEventsData();
+      event = fallbackList.find((e) => e._id === req.params.id || e.id === req.params.id);
+    }
+
     if (event) {
-      res.json(event);
+      return res.json(event);
     } else {
-      res.status(404).json({ message: 'Event not found' });
+      return res.status(404).json({ message: 'Event not found' });
     }
   } catch (error) {
-    res.status(404).json({ message: 'Event not found' });
+    return res.status(404).json({ message: 'Event not found' });
   }
 };
 

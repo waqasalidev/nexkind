@@ -1,10 +1,11 @@
-import { Search, MapPin, Building2, Clock, X, DollarSign } from 'lucide-react';
+import { Search, MapPin, Building2, Clock, X, DollarSign, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { getJobs } from '../../api';
 import CompanyLogo from '../../components/CompanyLogo';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { fallbackJobs } from '../../data/fallbackJobs';
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -17,7 +18,51 @@ const Jobs = () => {
   const [cityFilter, setCityFilter] = useState('');
   const [expFilter, setExpFilter] = useState('');
 
-  const fetchJobs = async () => {
+  const filterFallbackJobs = useCallback(() => {
+    let list = [...fallbackJobs];
+    if (countryFilter) {
+      const c = countryFilter.toLowerCase();
+      list = list.filter(
+        (j) =>
+          (j.country && j.country.toLowerCase().includes(c)) ||
+          (j.location && j.location.toLowerCase().includes(c))
+      );
+    }
+    if (cityFilter) {
+      const city = cityFilter.toLowerCase();
+      list = list.filter(
+        (j) =>
+          (j.city && j.city.toLowerCase().includes(city)) ||
+          (j.location && j.location.toLowerCase().includes(city))
+      );
+    }
+    if (typeFilter) {
+      list = list.filter((j) => j.type && j.type.toLowerCase() === typeFilter.toLowerCase());
+    }
+    if (workModeFilter) {
+      list = list.filter((j) => j.workMode && j.workMode.toLowerCase() === workModeFilter.toLowerCase());
+    }
+    if (expFilter) {
+      list = list.filter((j) => j.experienceLevel && j.experienceLevel.toLowerCase() === expFilter.toLowerCase());
+    }
+    if (categoryFilter) {
+      list = list.filter((j) => j.category && j.category.toLowerCase().includes(categoryFilter.toLowerCase()));
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (j) =>
+          (j.title && j.title.toLowerCase().includes(q)) ||
+          (j.company && j.company.toLowerCase().includes(q)) ||
+          (j.description && j.description.toLowerCase().includes(q)) ||
+          (j.location && j.location.toLowerCase().includes(q)) ||
+          (j.skills && j.skills.some((s) => s.toLowerCase().includes(q)))
+      );
+    }
+    return list;
+  }, [countryFilter, cityFilter, typeFilter, workModeFilter, expFilter, categoryFilter, search]);
+
+  const fetchJobs = useCallback(async () => {
     try {
       setLoading(true);
       const params = {};
@@ -28,24 +73,38 @@ const Jobs = () => {
       if (countryFilter) params.country = countryFilter;
       if (cityFilter) params.city = cityFilter;
       if (expFilter) params.experienceLevel = expFilter;
-      const { data } = await getJobs(params);
-      setJobs(Array.isArray(data) ? data : data.jobs || []);
+
+      const fetchPromise = getJobs(params);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Jobs timeout')), 3500)
+      );
+
+      const res = await Promise.race([fetchPromise, timeoutPromise]);
+      const data = res?.data;
+      const jobList = Array.isArray(data) ? data : data?.jobs || [];
+
+      if (jobList.length > 0) {
+        setJobs(jobList);
+      } else {
+        setJobs(filterFallbackJobs());
+      }
     } catch (error) {
-      console.error('Failed to fetch jobs', error);
-      setJobs([]);
+      console.warn('Jobs API unavailable, using verified fallback opportunities:', error.message);
+      setJobs(filterFallbackJobs());
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, typeFilter, workModeFilter, categoryFilter, countryFilter, cityFilter, expFilter, filterFallbackJobs]);
 
   useEffect(() => {
-    const timer = setTimeout(fetchJobs, 300);
+    const timer = setTimeout(fetchJobs, 250);
     return () => clearTimeout(timer);
-  }, [search, typeFilter, workModeFilter, categoryFilter, countryFilter, cityFilter, expFilter]);
+  }, [fetchJobs]);
 
   const categories = useMemo(() => {
-    const cats = [...new Set(jobs.map((j) => j.category).filter(Boolean))];
-    return cats.length ? cats : ['Technology', 'Marketing', 'Design', 'Finance'];
+    const combined = jobs.concat(fallbackJobs);
+    const cats = [...new Set(combined.map((j) => j.category).filter(Boolean))];
+    return cats.sort();
   }, [jobs]);
 
   const variants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
@@ -194,7 +253,7 @@ const Jobs = () => {
               </h2>
               {jobs.map((job) => (
                 <motion.div
-                  key={job._id}
+                  key={job._id || job.id}
                   variants={variants}
                   className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-primary/30 transition-all group flex flex-col sm:flex-row gap-6"
                 >
@@ -223,13 +282,13 @@ const Jobs = () => {
                     </div>
                     <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
                       {job.applyLink ? (
-                        <a href={job.applyLink} target="_blank" rel="noreferrer" className="btn btn-primary text-sm py-2">
-                          Apply Now
+                        <a href={job.applyLink} target="_blank" rel="noreferrer" className="btn btn-primary text-sm py-2 inline-flex items-center gap-1.5">
+                          Apply Now <ExternalLink size={14} />
                         </a>
                       ) : (
-                        <Link to={`/jobs/${job._id}/apply`} className="btn btn-primary text-sm py-2">Apply Now</Link>
+                        <Link to={`/jobs/${job._id || job.id}/apply`} className="btn btn-primary text-sm py-2">Apply Now</Link>
                       )}
-                      <Link to={`/jobs/${job._id}`} className="btn btn-secondary text-sm py-2">View Details</Link>
+                      <Link to={`/jobs/${job._id || job.id}`} className="btn btn-secondary text-sm py-2">View Details</Link>
                     </div>
                   </div>
                 </motion.div>

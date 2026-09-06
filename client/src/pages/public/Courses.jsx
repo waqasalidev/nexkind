@@ -2,8 +2,9 @@ import { Search, BookOpen, Clock, User, Star, Award, Sparkles } from 'lucide-rea
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { getCourses } from '../../api';
+import { fallbackCourses } from '../../data/fallbackCourses';
 
 const Courses = () => {
   const [courses, setCourses] = useState([]);
@@ -12,30 +13,64 @@ const Courses = () => {
   const [category, setCategory] = useState('');
   const [skillLevel, setSkillLevel] = useState('');
 
-  const fetchCourses = async () => {
+  const filterFallbackCourses = useCallback(() => {
+    let list = [...fallbackCourses];
+    if (category) {
+      list = list.filter((c) => c.category && c.category.toLowerCase().includes(category.toLowerCase()));
+    }
+    if (skillLevel) {
+      list = list.filter((c) => c.skillLevel && c.skillLevel.toLowerCase() === skillLevel.toLowerCase());
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (c) =>
+          (c.title && c.title.toLowerCase().includes(q)) ||
+          (c.description && c.description.toLowerCase().includes(q)) ||
+          (c.instructor && c.instructor.toLowerCase().includes(q)) ||
+          (c.category && c.category.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [category, skillLevel, search]);
+
+  const fetchCourses = useCallback(async () => {
     try {
       setLoading(true);
       const params = {};
       if (search) params.search = search;
       if (category) params.category = category;
       if (skillLevel) params.skillLevel = skillLevel;
-      const { data } = await getCourses(params);
-      setCourses(Array.isArray(data) ? data : data.courses || []);
+
+      const fetchPromise = getCourses(params);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Courses timeout')), 3500)
+      );
+
+      const res = await Promise.race([fetchPromise, timeoutPromise]);
+      const data = res?.data;
+      const list = Array.isArray(data) ? data : data?.courses || [];
+      if (list.length > 0) {
+        setCourses(list);
+      } else {
+        setCourses(filterFallbackCourses());
+      }
     } catch (error) {
-      console.error('Failed to fetch courses', error);
-      setCourses([]);
+      console.warn('Courses API unavailable, using verified fallback courses:', error.message);
+      setCourses(filterFallbackCourses());
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, category, skillLevel, filterFallbackCourses]);
 
   useEffect(() => {
-    const timer = setTimeout(fetchCourses, 300);
+    const timer = setTimeout(fetchCourses, 250);
     return () => clearTimeout(timer);
-  }, [search, category, skillLevel]);
+  }, [fetchCourses]);
 
   const categories = useMemo(() => {
-    const cats = [...new Set(courses.map((c) => c.category).filter(Boolean))];
+    const combined = courses.concat(fallbackCourses);
+    const cats = [...new Set(combined.map((c) => c.category).filter(Boolean))];
     return cats.length ? cats : ['Programming', 'Data Science', 'Design', 'Business'];
   }, [courses]);
 

@@ -3,6 +3,7 @@ import { ArrowLeft, CheckCircle, GraduationCap, Calendar, DollarSign, Globe } fr
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { getScholarship, getStudentDashboard } from '../../api';
+import { fallbackScholarships } from '../../data/fallbackScholarships';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 const ScholarshipDetails = () => {
@@ -16,12 +17,20 @@ const ScholarshipDetails = () => {
     const fetchScholarship = async () => {
       try {
         const { data } = await getScholarship(id);
-        setScholarship(data);
+        if (data) {
+          setScholarship(data);
+          return;
+        }
       } catch (error) {
-        console.error("Failed to fetch scholarship details", error);
-      } finally {
-        setLoading(false);
+        console.warn("[SCHOLARSHIP-DETAILS] Live fetch error, checking fallback:", error.message);
       }
+
+      // Check fallback
+      const found = fallbackScholarships.find(s => s._id === id || s.id === id);
+      if (found) {
+        setScholarship(found);
+      }
+      setLoading(false);
     };
 
     const checkStatus = async () => {

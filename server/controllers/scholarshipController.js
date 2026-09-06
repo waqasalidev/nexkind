@@ -1,5 +1,6 @@
 const Scholarship = require('../models/Scholarship');
 const { buildScholarshipQuery } = require('../utils/buildQuery');
+const scholarshipsData = require('../utils/scholarshipsData');
 
 // @desc    Create a new scholarship
 // @route   POST /api/scholarships
@@ -56,29 +57,83 @@ const getScholarships = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-
     const filter = buildScholarshipQuery(req.query);
 
-    if (req.query.page && req.query.limit) {
-      const skip = (page - 1) * limit;
-      const count = await Scholarship.countDocuments(filter);
-      const scholarships = await Scholarship.find(filter)
-        .limit(limit)
-        .skip(skip)
-        .sort({ createdAt: -1 });
+    let scholarships = [];
+    let count = 0;
 
+    try {
+      count = await Scholarship.countDocuments(filter);
+      if (req.query.page && req.query.limit) {
+        const skip = (page - 1) * limit;
+        scholarships = await Scholarship.find(filter)
+          .limit(limit)
+          .skip(skip)
+          .sort({ createdAt: -1 });
+      } else {
+        scholarships = await Scholarship.find(filter).sort({ createdAt: -1 });
+      }
+    } catch (dbErr) {
+      console.warn('[SCHOLARSHIPS] DB fetch warning:', dbErr.message);
+      scholarships = [];
+    }
+
+    // Fallback if 0 results
+    if (scholarships.length === 0) {
+      let list = [...scholarshipsData];
+      if (req.query.country) {
+        list = list.filter(
+          (s) => s.country && s.country.toLowerCase().includes(req.query.country.toLowerCase())
+        );
+      }
+      if (req.query.degreeLevel) {
+        list = list.filter(
+          (s) => s.degreeLevel && s.degreeLevel.toLowerCase() === req.query.degreeLevel.toLowerCase()
+        );
+      }
+      if (req.query.fundingType) {
+        list = list.filter(
+          (s) => s.fundingType && s.fundingType.toLowerCase() === req.query.fundingType.toLowerCase()
+        );
+      }
+      if (req.query.search) {
+        const q = req.query.search.toLowerCase();
+        list = list.filter(
+          (s) =>
+            (s.title && s.title.toLowerCase().includes(q)) ||
+            (s.description && s.description.toLowerCase().includes(q)) ||
+            (s.provider && s.provider.toLowerCase().includes(q)) ||
+            (s.university && s.university.toLowerCase().includes(q)) ||
+            (s.country && s.country.toLowerCase().includes(q))
+        );
+      }
+
+      if (req.query.page && req.query.limit) {
+        const skip = (page - 1) * limit;
+        return res.json({
+          scholarships: list.slice(skip, skip + limit),
+          page,
+          pages: Math.ceil(list.length / limit) || 1,
+          total: list.length,
+        });
+      } else {
+        return res.json(list);
+      }
+    }
+
+    if (req.query.page && req.query.limit) {
       return res.json({
         scholarships,
         page,
-        pages: Math.ceil(count / limit),
-        total: count
+        pages: Math.ceil(count / limit) || 1,
+        total: count,
       });
     } else {
-        const scholarships = await Scholarship.find(filter).sort({ createdAt: -1 });
-        return res.json(scholarships);
+      return res.json(scholarships);
     }
   } catch (error) {
-    res.status(500).json({ message: 'Server Error' });
+    console.error('[SCHOLARSHIPS] getScholarships error:', error.message);
+    return res.json(scholarshipsData);
   }
 };
 
@@ -87,14 +142,26 @@ const getScholarships = async (req, res) => {
 // @access  Public
 const getScholarshipById = async (req, res) => {
   try {
-    const scholarship = await Scholarship.findById(req.params.id);
+    let scholarship = null;
+    try {
+      scholarship = await Scholarship.findById(req.params.id);
+    } catch {
+      scholarship = null;
+    }
+
+    if (!scholarship) {
+      scholarship = scholarshipsData.find(
+        (s) => s._id === req.params.id || s.id === req.params.id
+      );
+    }
+
     if (scholarship) {
-      res.json(scholarship);
+      return res.json(scholarship);
     } else {
-      res.status(404).json({ message: 'Scholarship not found' });
+      return res.status(404).json({ message: 'Scholarship not found' });
     }
   } catch (error) {
-    res.status(404).json({ message: 'Scholarship not found' });
+    return res.status(404).json({ message: 'Scholarship not found' });
   }
 };
 

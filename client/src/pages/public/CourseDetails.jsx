@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { getCourse, createEnrollment, checkCourseEnrollment, updateEnrollmentProgress } from '../../api';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { fallbackCourses } from '../../data/fallbackCourses';
 
 const CourseDetails = () => {
   const { id } = useParams();
@@ -18,16 +19,27 @@ const CourseDetails = () => {
   useEffect(() => {
     const fetchCourse = async () => {
       try {
-        const { data } = await getCourse(id);
-        setCourse(data);
-        if (data.modules && data.modules.length > 0) {
-          setExpandedModules({ 0: true });
+        const fetchPromise = getCourse(id);
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Course timeout')), 3500)
+        );
+        const res = await Promise.race([fetchPromise, timeoutPromise]);
+        if (res?.data) {
+          setCourse(res.data);
+          if (res.data.modules && res.data.modules.length > 0) {
+            setExpandedModules({ 0: true });
+          }
+          return;
         }
       } catch (error) {
-        console.error("Failed to fetch course details", error);
-      } finally {
-        setLoading(false);
+        console.warn("Failed to fetch course details from API, trying fallback:", error.message);
       }
+
+      const fb = fallbackCourses.find((c) => c._id === id || c.id === id);
+      if (fb) {
+        setCourse(fb);
+      }
+      setLoading(false);
     };
 
     const verifyEnrollmentStatus = async () => {

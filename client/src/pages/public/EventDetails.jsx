@@ -4,6 +4,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { getEvent, getStudentDashboard } from '../../api';
+import { fallbackEvents } from '../../data/fallbackEvents';
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -16,12 +17,20 @@ const EventDetails = () => {
     const fetchEvent = async () => {
       try {
         const { data } = await getEvent(id);
-        setEvent(data);
+        if (data) {
+          setEvent(data);
+          return;
+        }
       } catch (error) {
-        console.error("Failed to fetch event details", error);
-      } finally {
-        setLoading(false);
+        console.warn("[EVENT-DETAILS] Live fetch error, trying fallback:", error.message);
       }
+
+      // Check fallback
+      const found = fallbackEvents.find(e => e._id === id || e.id === id);
+      if (found) {
+        setEvent(found);
+      }
+      setLoading(false);
     };
 
     const checkStatus = async () => {

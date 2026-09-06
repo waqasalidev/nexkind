@@ -14,6 +14,7 @@ const Announcement = require('../models/Announcement');
 const AIHistory = require('../models/AIHistory');
 const scholarshipsData = require('./scholarshipsData');
 const jobsData = require('./jobsData');
+const { getEventsData } = require('./eventsData');
 const { SYSTEM_FALLBACK } = require('../services/aiService');
 
 const seedData = async () => {
@@ -378,85 +379,16 @@ const seedData = async () => {
       console.log('Dynamic Courses with Full Modules & Lessons Seeded');
     }
 
-    // 3. Seed Events (Upcoming & Past)
+    // 3. Seed Events (Upcoming & Past with Pakistan, India, Bangladesh, and Global coverage)
     const eventsCount = await Event.countDocuments();
-    if (eventsCount === 0) {
-      const dummyEvents = [
-        {
-          title: 'Global Tech Summit 2026',
-          description: 'Join top software engineers and tech visionaries for keynotes on Cloud Architecture, AI Innovation, and Next-gen Web Frameworks.',
-          date: '2026-09-15',
-          time: '09:00 AM - 05:00 PM',
-          startTime: '09:00 AM',
-          endTime: '05:00 PM',
-          location: 'Grand Convention Center, NY (and Online Virtual Hall)',
-          eventMode: 'hybrid',
-          meetingUrl: 'https://meet.nexkind.com/tech-summit-2026',
-          organizer: 'NexKind Engineering Council',
-          category: 'Conference',
-          capacity: 500,
-          attendeesCount: 142,
-          status: 'published',
-          image: 'https://images.unsplash.com/photo-1544531586-fde5298cdd40?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          agenda: [
-            { time: '09:00 AM', activity: 'Registration & Welcome Keynote' },
-            { time: '10:30 AM', activity: 'Panel: Building Autonomous AI Agents' },
-            { time: '01:00 PM', activity: 'Networking Lunch & Career Workshop' },
-            { time: '03:30 PM', activity: 'Closing Keynote & Q&A' }
-          ],
-          speakers: [
-            { name: 'Sundar Pichai', role: 'Chief Executive Officer', institution: 'Google', image: 'https://logo.clearbit.com/google.com' },
-            { name: 'Satya Nadella', role: 'Chief Executive Officer', institution: 'Microsoft', image: 'https://logo.clearbit.com/microsoft.com' }
-          ]
-        },
-        {
-          title: 'Global AI & Cloud Career Expo',
-          description: 'Virtual hiring event featuring top tech companies recruiting software engineers, data scientists, and product managers.',
-          date: '2026-10-20',
-          time: '10:00 AM - 04:00 PM',
-          startTime: '10:00 AM',
-          endTime: '04:00 PM',
-          location: 'Online Virtual Auditorium',
-          eventMode: 'online',
-          meetingUrl: 'https://meet.nexkind.com/career-expo-2026',
-          organizer: 'StartupGrind & NexKind Jobs',
-          category: 'Career Fair',
-          capacity: 1000,
-          attendeesCount: 289,
-          status: 'published',
-          image: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          agenda: [
-            { time: '10:00 AM', activity: 'Exhibitor Booths Open' },
-            { time: '11:30 AM', activity: 'Workshop: Acing Technical System Design Interviews' }
-          ],
-          speakers: [
-            { name: 'Gwynne Shotwell', role: 'President & COO', institution: 'SpaceX', image: 'https://logo.clearbit.com/spacex.com' }
-          ]
-        },
-        {
-          title: 'Annual Education & Tech Pioneer Conference 2025',
-          description: 'A look back at groundbreaking educational technology and digital literacy initiatives empowering students worldwide.',
-          date: '2025-11-10',
-          time: '09:00 AM - 04:00 PM',
-          startTime: '09:00 AM',
-          endTime: '04:00 PM',
-          location: 'Innovation Hall, London',
-          eventMode: 'offline',
-          meetingUrl: '',
-          organizer: 'Global EdTech Foundation',
-          category: 'Conference',
-          capacity: 350,
-          attendeesCount: 350,
-          status: 'published',
-          image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          agenda: [
-            { time: '09:30 AM', activity: 'Opening Remarks on Digital Equality' }
-          ],
-          speakers: []
-        }
-      ];
-      await Event.insertMany(dummyEvents);
-      console.log('Events (Upcoming & Past) Seeded');
+    if (eventsCount < 10) {
+      await Event.deleteMany({});
+      const eventsList = getEventsData().map(ev => {
+        const { _id, ...rest } = ev;
+        return rest;
+      });
+      await Event.insertMany(eventsList);
+      console.log('Upcoming Events Seeded (Pakistan, India, Bangladesh, Global)');
     }
 
     // 4. Seed Scholarships (ensure 50+ entries)

@@ -1,6 +1,7 @@
 const Job = require('../models/Job');
 const { buildJobQuery } = require('../utils/buildQuery');
 const { getCompanyLogoUrl, getCompanyLogoCandidates } = require('../utils/companyLogo');
+const jobsData = require('../utils/jobsData');
 
 // @desc    Create a new job
 // @route   POST /api/jobs
@@ -57,29 +58,89 @@ const getJobs = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-
     const filter = buildJobQuery(req.query);
 
-    if (req.query.page && req.query.limit) {
-      const skip = (page - 1) * limit;
-      const count = await Job.countDocuments(filter);
-      const jobs = await Job.find(filter)
-        .limit(limit)
-        .skip(skip)
-        .sort({ createdAt: -1 });
+    let jobs = [];
+    let count = 0;
 
+    try {
+      count = await Job.countDocuments(filter);
+      if (req.query.page && req.query.limit) {
+        const skip = (page - 1) * limit;
+        jobs = await Job.find(filter)
+          .limit(limit)
+          .skip(skip)
+          .sort({ createdAt: -1 });
+      } else {
+        jobs = await Job.find(filter).sort({ createdAt: -1 });
+      }
+    } catch (dbErr) {
+      console.warn('[JOBS] DB fetch warning:', dbErr.message);
+      jobs = [];
+    }
+
+    // Fallback to jobsData if 0 jobs found
+    if (jobs.length === 0) {
+      let list = [...jobsData];
+      if (req.query.country) {
+        const c = req.query.country.toLowerCase();
+        list = list.filter(
+          (j) =>
+            (j.country && j.country.toLowerCase().includes(c)) ||
+            (j.location && j.location.toLowerCase().includes(c))
+        );
+      }
+      if (req.query.type) {
+        list = list.filter(
+          (j) => j.type && j.type.toLowerCase() === req.query.type.toLowerCase()
+        );
+      }
+      if (req.query.category) {
+        list = list.filter(
+          (j) => j.category && j.category.toLowerCase().includes(req.query.category.toLowerCase())
+        );
+      }
+      if (req.query.search) {
+        const q = req.query.search.toLowerCase();
+        list = list.filter(
+          (j) =>
+            (j.title && j.title.toLowerCase().includes(q)) ||
+            (j.description && j.description.toLowerCase().includes(q)) ||
+            (j.company && j.company.toLowerCase().includes(q)) ||
+            (j.location && j.location.toLowerCase().includes(q)) ||
+            (j.country && j.country.toLowerCase().includes(q)) ||
+            (j.skills && j.skills.some((s) => s.toLowerCase().includes(q)))
+        );
+      }
+
+      count = list.length;
+      if (req.query.page && req.query.limit) {
+        const skip = (page - 1) * limit;
+        jobs = list.slice(skip, skip + limit);
+      } else {
+        jobs = list;
+      }
+    }
+
+    const enriched = jobs.map(enrichJobLogo);
+    if (req.query.page && req.query.limit) {
       return res.json({
-        jobs: jobs.map(enrichJobLogo),
+        jobs: enriched,
         page,
-        pages: Math.ceil(count / limit),
-        total: count
+        pages: Math.ceil(count / limit) || 1,
+        total: count,
       });
     } else {
-       const jobs = await Job.find(filter).sort({ createdAt: -1 });
-       return res.json(jobs.map(enrichJobLogo));
+      return res.json(enriched);
     }
   } catch (error) {
-    res.status(500).json({ message: 'Server Error' });
+    console.error('[JOBS] getJobs error:', error.message);
+    return res.json({
+      jobs: jobsData.slice(0, 10).map(enrichJobLogo),
+      page: 1,
+      pages: Math.ceil(jobsData.length / 10) || 1,
+      total: jobsData.length,
+    });
   }
 };
 
@@ -88,14 +149,26 @@ const getJobs = async (req, res) => {
 // @access  Public
 const getJobById = async (req, res) => {
   try {
-    const job = await Job.findById(req.params.id);
+    let job = null;
+    try {
+      job = await Job.findById(req.params.id);
+    } catch {
+      job = null;
+    }
+
+    if (!job) {
+      job = jobsData.find(
+        (j) => j._id === req.params.id || j.id === req.params.id
+      );
+    }
+
     if (job) {
-      res.json(enrichJobLogo(job));
+      return res.json(enrichJobLogo(job));
     } else {
-      res.status(404).json({ message: 'Job not found' });
+      return res.status(404).json({ message: 'Job not found' });
     }
   } catch (error) {
-    res.status(404).json({ message: 'Job not found' });
+    return res.status(404).json({ message: 'Job not found' });
   }
 };
 

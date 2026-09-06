@@ -60,11 +60,18 @@ const buildJobQuery = (query) => {
 
   if (query.includeExpired !== 'true') {
     filter.status = { $ne: 'archived' };
-    filter.$or = [
+    const deadlineOr = [
       { deadline: { $exists: false } },
       { deadline: null },
       { deadline: { $gte: new Date() } }
     ];
+    if (filter.$or) {
+      const existingOr = filter.$or;
+      delete filter.$or;
+      filter.$and = [{ $or: existingOr }, { $or: deadlineOr }];
+    } else {
+      filter.$or = deadlineOr;
+    }
   }
 
   return filter;
@@ -78,9 +85,12 @@ const buildEventQuery = (query) => {
     'location',
     'organizer',
     'category',
+    'country',
+    'city',
   ]);
   if (searchFilter) Object.assign(filter, searchFilter);
   if (query.category) filter.category = { $regex: query.category, $options: 'i' };
+  if (query.country) filter.country = { $regex: query.country, $options: 'i' };
   if (query.status) filter.status = query.status;
 
   return filter;
