@@ -19,10 +19,17 @@ const EventManager = () => {
     description: '',
     date: '',
     time: '', // e.g., "09:00 AM - 05:00 PM"
+    timezone: 'PKT (UTC+5)',
     location: '',
+    venue: '',
     organizer: '',
     category: '',
     image: '',
+    targetAudience: '',
+    registrationDeadline: '',
+    registrationUrl: '',
+    sourceName: '',
+    registrationInstructions: [''],
     agenda: [{ time: '', activity: '' }],
     speakers: [{ name: '', role: '', institution: '', image: '' }],
   };
@@ -65,6 +72,13 @@ const EventManager = () => {
       setCurrentEvent(eventItem);
       setFormData({
         ...eventItem,
+        timezone: eventItem.timezone || 'PKT (UTC+5)',
+        venue: eventItem.venue || '',
+        targetAudience: eventItem.targetAudience || '',
+        registrationDeadline: eventItem.registrationDeadline || '',
+        registrationUrl: eventItem.registrationUrl || eventItem.registrationLink || '',
+        sourceName: eventItem.sourceName || '',
+        registrationInstructions: eventItem.registrationInstructions && eventItem.registrationInstructions.length ? eventItem.registrationInstructions : [''],
         agenda: eventItem.agenda && eventItem.agenda.length ? eventItem.agenda : [{ time: '', activity: '' }],
         speakers: eventItem.speakers && eventItem.speakers.length ? eventItem.speakers : [{ name: '', role: '', institution: '', image: '' }]
       });
@@ -78,10 +92,18 @@ const EventManager = () => {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
+      const payload = {
+        ...formData,
+        registrationUrl: formData.registrationUrl || formData.registrationLink || '',
+        registrationLink: formData.registrationUrl || formData.registrationLink || '',
+        registrationInstructions: (formData.registrationInstructions || []).filter(i => i && i.trim()),
+        agenda: (formData.agenda || []).filter(a => a.time || a.activity),
+        speakers: (formData.speakers || []).filter(s => s.name || s.role)
+      };
       if (currentEvent) {
-        await updateEvent(currentEvent._id, formData);
+        await updateEvent(currentEvent._id, payload);
       } else {
-        await createEvent(formData);
+        await createEvent(payload);
       }
       fetchEvents();
       setIsModalOpen(false);
@@ -106,6 +128,22 @@ const EventManager = () => {
     } catch (error) {
       console.error("Failed to delete event:", error);
     }
+  };
+
+  // Registration Instruction Handlers
+  const handleInstructionChange = (index, value) => {
+    const updated = [...formData.registrationInstructions];
+    updated[index] = value;
+    setFormData({ ...formData, registrationInstructions: updated });
+  };
+
+  const addInstruction = () => {
+    setFormData({ ...formData, registrationInstructions: [...formData.registrationInstructions, ''] });
+  };
+
+  const removeInstruction = (index) => {
+    const updated = formData.registrationInstructions.filter((_, i) => i !== index);
+    setFormData({ ...formData, registrationInstructions: updated });
   };
 
   // Agenda Handlers
@@ -177,17 +215,52 @@ const EventManager = () => {
                   <FormInput label="Organizer" value={formData.organizer} onChange={e => setFormData({ ...formData, organizer: e.target.value })} />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   <FormInput label="Date (e.g. March 15, 2026)" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} required />
                   <FormInput label="Time (e.g. 09:00 AM - 05:00 PM)" value={formData.time} onChange={e => setFormData({ ...formData, time: e.target.value })} required />
-                  <FormInput label="Location" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} required />
+                  <FormInput label="Timezone" value={formData.timezone} onChange={e => setFormData({ ...formData, timezone: e.target.value })} placeholder="PKT (UTC+5)" />
+                  <FormInput label="Registration Deadline" value={formData.registrationDeadline} onChange={e => setFormData({ ...formData, registrationDeadline: e.target.value })} placeholder="March 12, 2026" />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormInput label="Location (City, Country or Online)" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} required />
+                  <FormInput label="Specific Venue / Platform" value={formData.venue} onChange={e => setFormData({ ...formData, venue: e.target.value })} placeholder="Online (Zoom / YouTube) or Hall A" />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormInput label="Official Registration URL" value={formData.registrationUrl || formData.registrationLink || ''} onChange={e => setFormData({ ...formData, registrationUrl: e.target.value, registrationLink: e.target.value })} placeholder="https://events.google.com/register" required />
+                  <FormInput label="Hosting / Organizing Source" value={formData.sourceName} onChange={e => setFormData({ ...formData, sourceName: e.target.value })} placeholder="e.g. Google Developers, IEEE" />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormInput label="Category" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} />
+                  <FormInput label="Target Audience" value={formData.targetAudience} onChange={e => setFormData({ ...formData, targetAudience: e.target.value })} placeholder="e.g. CS Undergrads, Developers" />
                 </div>
 
                 <FormTextArea label="About the Event (Description)" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} rows={4} required />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormInput label="Category" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} />
+                <div className="grid grid-cols-1 gap-6">
                   <FormInput label="Image URL" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} placeholder="https://..." />
+                </div>
+
+                {/* How to Register Section */}
+                <div className="space-y-3 pt-4 border-t border-slate-100">
+                  <label className="block text-sm font-bold text-slate-700">How to Register (Step-by-Step Guide for Attendees)</label>
+                  {formData.registrationInstructions.map((item, index) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        className="flex-1 input-field py-2"
+                        value={item}
+                        onChange={(e) => handleInstructionChange(index, e.target.value)}
+                        placeholder={`Step ${index + 1}: e.g. Open registration portal and fill attendee details`}
+                      />
+                      <button type="button" onClick={() => removeInstruction(index)} className="text-red-500 hover:text-red-700 p-2"><Trash2 size={18} /></button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={addInstruction} className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">
+                    <Plus size={16} /> Add Step
+                  </button>
                 </div>
 
                 {/* Agenda Section */}

@@ -23,7 +23,19 @@ const createEvent = async (req, res) => {
       capacity,
       agenda,
       speakers,
-      status
+      status,
+      timezone,
+      venue,
+      targetAudience,
+      eligibility,
+      registrationDeadline,
+      registrationInstructions,
+      registrationUrl,
+      country,
+      city,
+      source,
+      sourceName,
+      sourceUrl,
     } = req.body;
 
     const event = new Event({
@@ -42,7 +54,19 @@ const createEvent = async (req, res) => {
       capacity: capacity || 100,
       agenda,
       speakers,
-      status: status || 'published'
+      status: status || 'published',
+      timezone: timezone || 'PKT (UTC+5)',
+      venue: venue || location,
+      targetAudience,
+      eligibility: eligibility || [],
+      registrationDeadline,
+      registrationInstructions: registrationInstructions || [],
+      registrationUrl: registrationUrl || meetingUrl,
+      country: country || 'Global',
+      city: city || 'Online',
+      source: source || 'NexKind NGO Community',
+      sourceName: sourceName || source || organizer || 'Official Event Host',
+      sourceUrl: sourceUrl || meetingUrl,
     });
 
     const createdEvent = await event.save();
@@ -145,7 +169,7 @@ const getEventById = async (req, res) => {
     if (!event) {
       // Check fallback events
       const fallbackList = getEventsData();
-      event = fallbackList.find((e) => e._id === req.params.id || e.id === req.params.id);
+      event = fallbackList.find((e) => String(e._id) === String(req.params.id) || String(e.id) === String(req.params.id));
     }
 
     if (event) {
@@ -176,6 +200,18 @@ const updateEvent = async (req, res) => {
       event.image = req.body.image || event.image;
       event.agenda = req.body.agenda || event.agenda;
       event.speakers = req.body.speakers || event.speakers;
+      event.timezone = req.body.timezone || event.timezone;
+      event.venue = req.body.venue || event.venue;
+      event.targetAudience = req.body.targetAudience || event.targetAudience;
+      event.eligibility = req.body.eligibility || event.eligibility;
+      event.registrationDeadline = req.body.registrationDeadline || event.registrationDeadline;
+      event.registrationInstructions = req.body.registrationInstructions || event.registrationInstructions;
+      event.registrationUrl = req.body.registrationUrl || event.registrationUrl;
+      event.country = req.body.country || event.country;
+      event.city = req.body.city || event.city;
+      event.source = req.body.source || event.source;
+      event.sourceName = req.body.sourceName || event.sourceName;
+      event.sourceUrl = req.body.sourceUrl || event.sourceUrl;
 
       const updatedEvent = await event.save();
       res.json(updatedEvent);

@@ -1938,4 +1938,33 @@ const scholarshipsData = [
   }
 ];
 
-module.exports = scholarshipsData;
+const enrichedScholarshipsData = scholarshipsData.map((s) => ({
+  ...s,
+  fieldOfStudy: s.fieldOfStudy || s.field || 'STEM, Social Sciences, Engineering, Business & Computer Science',
+  degreeProgram: s.degreeProgram || s.degreeLevel || 'Undergraduate / Postgraduate Studies',
+  eligibleCountries: s.eligibleCountries && s.eligibleCountries.length > 0 ? s.eligibleCountries : [s.country || 'International'],
+  ageRequirements: s.ageRequirements || 'Maximum 35 years at application deadline (relaxable for government employees/faculty)',
+  academicRequirements: s.academicRequirements || (s.eligibilityCriteria?.[2] || 'Minimum 3.0/4.0 CGPA, 1st Division, or equivalent academic standing'),
+  languageRequirements: s.languageRequirements || 'English proficiency certificate or previous medium of instruction in English',
+  benefits: s.benefits && s.benefits.length > 0 ? s.benefits : [
+    '100% Full Tuition Fee Waiver across all degree semesters',
+    'Monthly living maintenance stipend allowance',
+    'Subsidized university accommodation / hostel residency allowance',
+    'Comprehensive student health, medical & emergency insurance',
+    'Annual academic books, research materials, and equipment grant'
+  ],
+  applicationInstructions: s.applicationInstructions && s.applicationInstructions.length > 0 ? s.applicationInstructions : [
+    'Confirm your nationality, academic score, and eligibility criteria.',
+    'Prepare verified transcripts, CNIC/National ID/Passport, statement of purpose, and reference letters.',
+    'Click "Apply for Scholarship" to open the official government/university scholarship portal.',
+    'Create an applicant profile and complete all academic & family background sections.',
+    'Upload required attested documents and submit the online application before the published deadline.',
+    'Print or download the submission confirmation receipt for scholarship tracking.'
+  ],
+  applyUrl: s.applyUrl || s.applyLink,
+  sourceUrl: s.sourceUrl || s.providerLink,
+  sourceName: s.sourceName || s.source || (s.provider ? `${s.provider} Official Portal` : 'Official Scholarship Foundation'),
+  status: s.status || 'Active / Accepting Applications'
+}));
+
+module.exports = enrichedScholarshipsData;

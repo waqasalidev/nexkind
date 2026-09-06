@@ -18,11 +18,22 @@ const createScholarship = async (req, res) => {
       requiredDocuments,
       providerLink,
       applyLink,
+      applyUrl,
       image,
       country,
       university,
       degreeLevel,
       fundingType,
+      benefits,
+      applicationInstructions,
+      ageRequirements,
+      academicRequirements,
+      languageRequirements,
+      eligibleCountries,
+      financialCoverage,
+      source,
+      sourceName,
+      sourceUrl,
     } = req.body;
 
     const scholarship = new Scholarship({
@@ -34,13 +45,24 @@ const createScholarship = async (req, res) => {
       deadline,
       eligibilityCriteria,
       requiredDocuments,
+      benefits: benefits || [],
+      applicationInstructions: applicationInstructions || [],
+      ageRequirements,
+      academicRequirements,
+      languageRequirements,
+      eligibleCountries: eligibleCountries || [],
+      financialCoverage,
       providerLink,
-      applyLink,
+      applyLink: applyUrl || applyLink,
+      applyUrl: applyUrl || applyLink,
       image,
       country,
       university,
       degreeLevel,
       fundingType,
+      source: source || 'NexKind NGO Verified',
+      sourceName: sourceName || source || provider || 'Official Scholarship Portal',
+      sourceUrl: sourceUrl || providerLink,
     });
 
     const createdScholarship = await scholarship.save();
@@ -151,7 +173,7 @@ const getScholarshipById = async (req, res) => {
 
     if (!scholarship) {
       scholarship = scholarshipsData.find(
-        (s) => s._id === req.params.id || s.id === req.params.id
+        (s) => String(s._id) === String(req.params.id) || String(s.id) === String(req.params.id)
       );
     }
 
@@ -182,12 +204,23 @@ const updateScholarship = async (req, res) => {
       scholarship.eligibilityCriteria = req.body.eligibilityCriteria || scholarship.eligibilityCriteria;
       scholarship.requiredDocuments = req.body.requiredDocuments || scholarship.requiredDocuments;
       scholarship.providerLink = req.body.providerLink || scholarship.providerLink;
-      scholarship.applyLink = req.body.applyLink || scholarship.applyLink;
+      scholarship.applyLink = req.body.applyUrl || req.body.applyLink || scholarship.applyLink;
+      scholarship.applyUrl = req.body.applyUrl || req.body.applyLink || scholarship.applyUrl || scholarship.applyLink;
       scholarship.image = req.body.image || scholarship.image;
       scholarship.country = req.body.country || scholarship.country;
       scholarship.university = req.body.university || scholarship.university;
       scholarship.degreeLevel = req.body.degreeLevel || scholarship.degreeLevel;
       scholarship.fundingType = req.body.fundingType || scholarship.fundingType;
+      scholarship.benefits = req.body.benefits || scholarship.benefits;
+      scholarship.applicationInstructions = req.body.applicationInstructions || scholarship.applicationInstructions;
+      scholarship.ageRequirements = req.body.ageRequirements || scholarship.ageRequirements;
+      scholarship.academicRequirements = req.body.academicRequirements || scholarship.academicRequirements;
+      scholarship.languageRequirements = req.body.languageRequirements || scholarship.languageRequirements;
+      scholarship.eligibleCountries = req.body.eligibleCountries || scholarship.eligibleCountries;
+      scholarship.financialCoverage = req.body.financialCoverage || scholarship.financialCoverage;
+      scholarship.source = req.body.source || scholarship.source;
+      scholarship.sourceName = req.body.sourceName || scholarship.sourceName;
+      scholarship.sourceUrl = req.body.sourceUrl || scholarship.sourceUrl;
 
       const updatedScholarship = await scholarship.save();
       res.json(updatedScholarship);

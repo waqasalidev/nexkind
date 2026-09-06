@@ -31,8 +31,11 @@ const jobSchema = mongoose.Schema({
   requirements: [{ type: String }],
   skills: [{ type: String }],
   benefits: [{ type: String }],
+  education: { type: String },
+  applicationInstructions: [{ type: String }],
   companyLink: { type: String },
   applyLink: { type: String },
+  applyUrl: { type: String },
   image: { type: String },
   deadline: { type: Date },
   status: {
@@ -43,6 +46,7 @@ const jobSchema = mongoose.Schema({
   applicantsCount: { type: Number, default: 0 },
   // Integration & Source Metadata
   source: { type: String, default: 'NexKind NGO Partner' },
+  sourceName: { type: String },
   sourceUrl: { type: String },
   externalJobId: { type: String },
   applicationUrl: { type: String },

@@ -25,11 +25,17 @@ const JobManager = () => {
     image: '',
     category: 'Technology',
     workMode: 'On-site',
+    country: '',
+    city: '',
+    education: '',
+    deadline: '',
+    sourceName: '',
     applyLink: '',
     companyLink: '',
     responsibilities: [''],
     requirements: [''],
     benefits: [''],
+    applicationInstructions: [''],
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -80,6 +86,8 @@ const JobManager = () => {
         responsibilities: item.responsibilities && item.responsibilities.length ? item.responsibilities : [''],
         requirements: item.requirements && item.requirements.length ? item.requirements : [''],
         benefits: item.benefits && item.benefits.length ? item.benefits : [''],
+        applicationInstructions: item.applicationInstructions && item.applicationInstructions.length ? item.applicationInstructions : [''],
+        deadline: item.deadline ? new Date(item.deadline).toISOString().split('T')[0] : '',
       });
     } else {
       setCurrentJob(null);
@@ -211,8 +219,23 @@ const JobManager = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormInput label="Apply Link" value={formData.applyLink} onChange={e => setFormData({ ...formData, applyLink: e.target.value })} placeholder="https://..." />
-                  <FormInput label="Company Logo URL" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} placeholder="https://logo.clearbit.com/company.com" />
+                  <FormInput label="Country (e.g. Pakistan, India)" value={formData.country || ''} onChange={e => setFormData({ ...formData, country: e.target.value })} />
+                  <FormInput label="City (e.g. Lahore, Bangalore)" value={formData.city || ''} onChange={e => setFormData({ ...formData, city: e.target.value })} />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormInput label="Education Prerequisite" value={formData.education || ''} onChange={e => setFormData({ ...formData, education: e.target.value })} placeholder="Bachelor's in CS / Software Engineering" />
+                  <FormInput label="Application Deadline" type="date" value={formData.deadline || ''} onChange={e => setFormData({ ...formData, deadline: e.target.value })} />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormInput label="Apply Link (Official URL)" value={formData.applyLink || formData.applyUrl || ''} onChange={e => setFormData({ ...formData, applyLink: e.target.value, applyUrl: e.target.value })} placeholder="https://company.com/careers" />
+                  <FormInput label="Application Source Label" value={formData.sourceName || ''} onChange={e => setFormData({ ...formData, sourceName: e.target.value })} placeholder="Official Company Careers Portal" />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormInput label="Company Website Link" value={formData.companyLink || ''} onChange={e => setFormData({ ...formData, companyLink: e.target.value })} />
+                  <FormInput label="Company Logo URL" value={formData.image || ''} onChange={e => setFormData({ ...formData, image: e.target.value })} placeholder="https://logo.clearbit.com/company.com" />
                 </div>
 
                 <FormTextArea label="Job Description" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} rows={4} required />
@@ -277,6 +300,25 @@ const JobManager = () => {
                   </button>
                 </div>
 
+                {/* How to Apply Instructions */}
+                <div className="space-y-3 pt-4 border-t border-slate-100">
+                  <label className="block text-sm font-bold text-slate-700">How to Apply (Step-by-Step Instructions)</label>
+                  {(formData.applicationInstructions || ['']).map((item, index) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        className="flex-1 input-field py-2"
+                        value={item}
+                        onChange={(e) => handleArrayChange(index, e.target.value, 'applicationInstructions')}
+                        placeholder={`Step ${index + 1}: e.g. Review eligibility and submit CV on official portal`}
+                      />
+                      <button type="button" onClick={() => removeArrayItem(index, 'applicationInstructions')} className="text-red-500 hover:text-red-700 p-2"><Trash2 size={18} /></button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={() => addArrayItem('applicationInstructions')} className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">
+                    <Plus size={16} /> Add Application Step
+                  </button>
+                </div>
               </form>
             </div>
 

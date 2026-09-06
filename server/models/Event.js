@@ -41,7 +41,13 @@ const eventSchema = mongoose.Schema({
   agenda: [agendaItemSchema],
   speakers: [speakerSchema],
 
-  // Meta
+  // Detailed Event Metadata
+  timezone: { type: String, default: 'PKT (UTC+5)' },
+  venue: { type: String },
+  targetAudience: { type: String },
+  eligibility: [{ type: String }],
+  registrationDeadline: { type: String },
+  registrationInstructions: [{ type: String }],
   registrationLink: { type: String }, // optional
   // Integration & Source Metadata
   registrationUrl: { type: String },
@@ -49,6 +55,7 @@ const eventSchema = mongoose.Schema({
   country: { type: String, default: 'Global' },
   city: { type: String, default: 'Online' },
   source: { type: String, default: 'NexKind NGO Community' },
+  sourceName: { type: String },
   sourceUrl: { type: String },
   externalEventId: { type: String },
   lastSyncedAt: { type: Date, default: Date.now },

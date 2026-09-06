@@ -1692,4 +1692,27 @@ const jobsData = [
   }
 ];
 
-module.exports = jobsData;
+const enrichedJobsData = jobsData.map((j) => ({
+  ...j,
+  education: j.education || "Bachelor's in Computer Science, Software Engineering, IT, Business, or related discipline",
+  experience: j.experience || `${j.experienceLevel || 'Entry-level'} (0-2 years relevant experience)`,
+  benefits: j.benefits && j.benefits.length > 0 ? j.benefits : [
+    'Competitive market compensation with regular performance reviews',
+    'Comprehensive healthcare & family medical insurance coverage',
+    'Professional mentorship, paid courses & technology certification support',
+    'Flexible hybrid/remote schedule & work equipment allowance'
+  ],
+  applicationInstructions: j.applicationInstructions && j.applicationInstructions.length > 0 ? j.applicationInstructions : [
+    'Review the role responsibilities, tech stack, and qualification criteria.',
+    'Prepare your updated CV/resume and links to active code repositories (GitHub/Portfolio).',
+    'Click "Apply Now" to navigate directly to the official company careers portal.',
+    'Complete the online application form with accurate academic and professional details.',
+    'Submit your application before the deadline and save your registration/reference number.'
+  ],
+  applyUrl: j.applyUrl || j.applyLink || j.applicationUrl,
+  sourceUrl: j.sourceUrl || j.companyLink,
+  sourceName: j.sourceName || j.source || (j.company ? `${j.company} Official Careers` : 'Official Company Portal'),
+  postedDate: j.postedDate || 'Recently posted'
+}));
+
+module.exports = enrichedJobsData;

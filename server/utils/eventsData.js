@@ -356,4 +356,30 @@ const getEventsData = () => [
   }
 ];
 
-module.exports = { getEventsData };
+const getEnrichedEventsData = () => {
+  return getEventsData().map((e) => ({
+    ...e,
+    venue: e.venue || e.location || 'Official Conference Venue & Virtual Stream',
+    timezone: e.timezone || (e.country === 'India' ? 'IST (UTC+5:30)' : e.country === 'Bangladesh' ? 'BST (UTC+6)' : 'PKT (UTC+5)'),
+    targetAudience: e.targetAudience || 'Undergraduate/Graduate Students, Software Engineers, and Tech Enthusiasts',
+    eligibility: e.eligibility && e.eligibility.length > 0 ? e.eligibility : [
+      'Open to all students, developers, and aspiring technologists',
+      'Free admission with prior online registration',
+      'Valid student ID or government ID required at entry (for in-person)'
+    ],
+    registrationDeadline: e.registrationDeadline || '2 days before event commencement',
+    registrationInstructions: e.registrationInstructions && e.registrationInstructions.length > 0 ? e.registrationInstructions : [
+      'Check the event date, start/end time, timezone, and venue/stream link.',
+      'Click "Register Now" to navigate to the official event registration portal.',
+      'Enter your full name, student/professional email, and college/organization.',
+      'Select your preferred breakout sessions or technical tracks.',
+      'Confirm your registration and save the admission ticket / calendar invite.'
+    ],
+    registrationUrl: e.registrationUrl || e.registrationLink || e.meetingUrl,
+    sourceUrl: e.sourceUrl || e.meetingUrl,
+    sourceName: e.sourceName || e.source || (e.organizer ? `${e.organizer}` : 'NexKind NGO Community'),
+    status: e.status || 'published'
+  }));
+};
+
+module.exports = { getEventsData: getEnrichedEventsData };

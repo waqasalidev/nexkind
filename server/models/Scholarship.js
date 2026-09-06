@@ -30,8 +30,14 @@ const scholarshipSchema = mongoose.Schema({
   deadline: { type: String, required: true },
   eligibilityCriteria: [{ type: String }],
   requiredDocuments: [{ type: String }],
+  benefits: [{ type: String }],
+  applicationInstructions: [{ type: String }],
+  ageRequirements: { type: String },
+  academicRequirements: { type: String },
+  languageRequirements: { type: String },
   providerLink: { type: String },
   applyLink: { type: String },
+  applyUrl: { type: String },
   sourceReference: { type: String, default: 'NexKind NGO Verified Partner' },
   isPartnerListing: { type: Boolean, default: true },
   image: { type: String },
@@ -39,6 +45,7 @@ const scholarshipSchema = mongoose.Schema({
   // Integration & Source Metadata
   organization: { type: String },
   source: { type: String, default: 'NexKind NGO Verified' },
+  sourceName: { type: String },
   sourceUrl: { type: String },
   externalScholarshipId: { type: String },
   verificationStatus: {

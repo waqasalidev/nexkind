@@ -23,8 +23,12 @@ const ScholarshipManager = () => {
     description: '',
     eligibilityCriteria: [''],
     requiredDocuments: [''],
+    benefits: [''],
+    applicationInstructions: [''],
     providerLink: '',
     applyLink: '',
+    applyUrl: '',
+    sourceName: '',
     image: '',
     country: '',
     university: '',
@@ -101,7 +105,11 @@ const ScholarshipManager = () => {
       setFormData({
         ...item,
         eligibilityCriteria: item.eligibilityCriteria && item.eligibilityCriteria.length ? item.eligibilityCriteria : [''],
-        requiredDocuments: item.requiredDocuments && item.requiredDocuments.length ? item.requiredDocuments : ['']
+        requiredDocuments: item.requiredDocuments && item.requiredDocuments.length ? item.requiredDocuments : [''],
+        benefits: item.benefits && item.benefits.length ? item.benefits : [''],
+        applicationInstructions: item.applicationInstructions && item.applicationInstructions.length ? item.applicationInstructions : [''],
+        applyUrl: item.applyUrl || item.applyLink || '',
+        sourceName: item.sourceName || ''
       });
     } else {
       setCurrentScholarship(null);
@@ -113,10 +121,19 @@ const ScholarshipManager = () => {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
+      const payload = {
+        ...formData,
+        applyUrl: formData.applyUrl || formData.applyLink || '',
+        applyLink: formData.applyUrl || formData.applyLink || '',
+        eligibilityCriteria: (formData.eligibilityCriteria || []).filter(i => i && i.trim()),
+        requiredDocuments: (formData.requiredDocuments || []).filter(i => i && i.trim()),
+        benefits: (formData.benefits || []).filter(i => i && i.trim()),
+        applicationInstructions: (formData.applicationInstructions || []).filter(i => i && i.trim())
+      };
       if (currentScholarship) {
-        await updateScholarship(currentScholarship._id, formData);
+        await updateScholarship(currentScholarship._id, payload);
       } else {
-        await createScholarship(formData);
+        await createScholarship(payload);
       }
       fetchScholarships();
       setIsModalOpen(false);
@@ -233,7 +250,12 @@ const ScholarshipManager = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormInput label="Image URL (Logo)" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} placeholder="https://..." />
-                  <FormInput label="Provider Website Link" value={formData.providerLink} onChange={e => setFormData({ ...formData, providerLink: e.target.value })} />
+                  <FormInput label="Provider Website Link" value={formData.providerLink} onChange={e => setFormData({ ...formData, providerLink: e.target.value })} placeholder="https://provider.org" />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormInput label="Official Application Link (Apply URL)" value={formData.applyUrl || formData.applyLink || ''} onChange={e => setFormData({ ...formData, applyUrl: e.target.value, applyLink: e.target.value })} placeholder="https://official-portal.gov/apply" required />
+                  <FormInput label="Official Source / Authority Name" value={formData.sourceName} onChange={e => setFormData({ ...formData, sourceName: e.target.value })} placeholder="e.g. Higher Education Commission, Ministry of Education" />
                 </div>
 
                 {/* Eligibility */}
@@ -256,6 +278,26 @@ const ScholarshipManager = () => {
                   </button>
                 </div>
 
+                {/* Benefits / Coverage */}
+                <div className="space-y-3 pt-4 border-t border-slate-100">
+                  <label className="block text-sm font-bold text-slate-700">Benefits & Coverage (What is covered)</label>
+                  {formData.benefits.map((item, index) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        className="flex-1 input-field py-2"
+                        value={item}
+                        onChange={(e) => handleArrayChange(index, e.target.value, 'benefits')}
+                        placeholder={`e.g. 100% Tuition fee waiver, Monthly living allowance $1,200, Return airfare`}
+                      />
+                      <button type="button" onClick={() => removeArrayItem(index, 'benefits')} className="text-red-500 hover:text-red-700 p-2"><Trash2 size={18} /></button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={() => addArrayItem('benefits')} className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">
+                    <Plus size={16} /> Add Benefit
+                  </button>
+                </div>
+
                 {/* Required Documents */}
                 <div className="space-y-3 pt-4 border-t border-slate-100">
                   <label className="block text-sm font-bold text-slate-700">Required Documents</label>
@@ -273,6 +315,26 @@ const ScholarshipManager = () => {
                   ))}
                   <button type="button" onClick={() => addArrayItem('requiredDocuments')} className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">
                     <Plus size={16} /> Add Document
+                  </button>
+                </div>
+
+                {/* How to Apply / Step-by-Step Instructions */}
+                <div className="space-y-3 pt-4 border-t border-slate-100">
+                  <label className="block text-sm font-bold text-slate-700">How to Apply (Step-by-Step Guide for Students)</label>
+                  {formData.applicationInstructions.map((item, index) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        className="flex-1 input-field py-2"
+                        value={item}
+                        onChange={(e) => handleArrayChange(index, e.target.value, 'applicationInstructions')}
+                        placeholder={`Step ${index + 1}: e.g. Register an account on the national portal`}
+                      />
+                      <button type="button" onClick={() => removeArrayItem(index, 'applicationInstructions')} className="text-red-500 hover:text-red-700 p-2"><Trash2 size={18} /></button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={() => addArrayItem('applicationInstructions')} className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">
+                    <Plus size={16} /> Add Step
                   </button>
                 </div>
 

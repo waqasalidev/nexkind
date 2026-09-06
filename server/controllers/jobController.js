@@ -21,9 +21,19 @@ const createJob = async (req, res) => {
       benefits,
       companyLink,
       applyLink,
+      applyUrl,
       image,
       category,
       workMode,
+      country,
+      city,
+      skills,
+      education,
+      applicationInstructions,
+      source,
+      sourceName,
+      sourceUrl,
+      deadline,
     } = req.body;
 
     const job = new Job({
@@ -38,10 +48,20 @@ const createJob = async (req, res) => {
       requirements,
       benefits,
       companyLink,
-      applyLink,
+      applyLink: applyUrl || applyLink,
+      applyUrl: applyUrl || applyLink,
       image: image || getCompanyLogoUrl(company),
       category,
       workMode,
+      country: country || 'Global',
+      city: city || 'Remote',
+      skills: skills || [],
+      education,
+      applicationInstructions: applicationInstructions || [],
+      source: source || 'NexKind NGO Partner',
+      sourceName: sourceName || source || (company ? `${company} Careers` : 'Official Company Website'),
+      sourceUrl: sourceUrl || companyLink,
+      deadline,
     });
 
     const createdJob = await job.save();
@@ -158,7 +178,7 @@ const getJobById = async (req, res) => {
 
     if (!job) {
       job = jobsData.find(
-        (j) => j._id === req.params.id || j.id === req.params.id
+        (j) => String(j._id) === String(req.params.id) || String(j.id) === String(req.params.id)
       );
     }
 
@@ -191,10 +211,20 @@ const updateJob = async (req, res) => {
       job.requirements = req.body.requirements || job.requirements;
       job.benefits = req.body.benefits || job.benefits;
       job.companyLink = req.body.companyLink || job.companyLink;
-      job.applyLink = req.body.applyLink || job.applyLink;
+      job.applyLink = req.body.applyUrl || req.body.applyLink || job.applyLink;
+      job.applyUrl = req.body.applyUrl || req.body.applyLink || job.applyUrl || job.applyLink;
       job.image = req.body.image || job.image || getCompanyLogoUrl(job.company);
       job.category = req.body.category || job.category;
       job.workMode = req.body.workMode || job.workMode;
+      job.country = req.body.country || job.country;
+      job.city = req.body.city || job.city;
+      job.skills = req.body.skills || job.skills;
+      job.education = req.body.education || job.education;
+      job.applicationInstructions = req.body.applicationInstructions || job.applicationInstructions;
+      job.source = req.body.source || job.source;
+      job.sourceName = req.body.sourceName || job.sourceName;
+      job.sourceUrl = req.body.sourceUrl || job.sourceUrl;
+      job.deadline = req.body.deadline || job.deadline;
 
       const updatedJob = await job.save();
       res.json(updatedJob);
@@ -229,6 +259,10 @@ const enrichJobLogo = (job) => {
   doc.logoCandidates = getCompanyLogoCandidates(doc.company, doc.image);
   doc.logoUrl = doc.logoCandidates[0] || getCompanyLogoUrl(doc.company, doc.image);
   if (!doc.image && doc.logoUrl) doc.image = doc.logoUrl;
+  doc.applyUrl = doc.applyUrl || doc.applyLink || doc.applicationUrl;
+  doc.applyLink = doc.applyUrl;
+  doc.sourceName = doc.sourceName || doc.source || (doc.company ? `${doc.company} Official Careers` : 'Official Company Website');
+  doc.sourceUrl = doc.sourceUrl || doc.companyLink;
   return doc;
 };
 

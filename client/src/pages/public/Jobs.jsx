@@ -270,25 +270,37 @@ const Jobs = () => {
                         {job.type}
                       </span>
                     </div>
-                    <div className="flex flex-wrap gap-4 mt-3 text-sm text-slate-500">
-                      <span className="flex items-center gap-1"><MapPin size={14} /> {job.location}</span>
-                      <span className="flex items-center gap-1"><Building2 size={14} /> {job.workMode || 'On-site'}</span>
+                    <div className="flex flex-wrap gap-4 mt-2.5 text-xs text-slate-500 font-medium">
+                      <span className="flex items-center gap-1"><MapPin size={13} className="text-slate-400" /> {job.location || `${job.city}, ${job.country}`}</span>
+                      <span className="flex items-center gap-1"><Building2 size={13} className="text-slate-400" /> {job.workMode || 'On-site'}</span>
                       {job.salary && (
-                        <span className="flex items-center gap-1"><DollarSign size={14} /> {job.salary}</span>
+                        <span className="flex items-center gap-1 text-emerald-700 font-semibold"><DollarSign size={13} /> {job.salary}</span>
                       )}
-                      {job.category && (
-                        <span className="flex items-center gap-1"><Clock size={14} /> {job.category}</span>
+                      {job.deadline && (
+                        <span className="flex items-center gap-1 text-slate-500">
+                          <Clock size={13} className="text-slate-400" /> Deadline: {new Date(job.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
                       )}
                     </div>
-                    <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
-                      {job.applyLink ? (
-                        <a href={job.applyLink} target="_blank" rel="noreferrer" className="btn btn-primary text-sm py-2 inline-flex items-center gap-1.5">
-                          Apply Now <ExternalLink size={14} />
-                        </a>
-                      ) : (
-                        <Link to={`/jobs/${job._id || job.id}/apply`} className="btn btn-primary text-sm py-2">Apply Now</Link>
+
+                    {job.description && (
+                      <p className="text-slate-600 text-xs sm:text-sm mt-3 line-clamp-2 leading-relaxed">
+                        {job.description}
+                      </p>
+                    )}
+
+                    <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between gap-3">
+                      <Link
+                        to={`/jobs/${job._id || job.id}`}
+                        className="btn btn-primary text-xs sm:text-sm py-2 px-5 font-bold inline-flex items-center gap-1.5"
+                      >
+                        View Details & Apply →
+                      </Link>
+                      {job.country && (
+                        <span className="text-xs font-semibold text-slate-400">
+                          {job.country}
+                        </span>
                       )}
-                      <Link to={`/jobs/${job._id || job.id}`} className="btn btn-secondary text-sm py-2">View Details</Link>
                     </div>
                   </div>
                 </motion.div>
